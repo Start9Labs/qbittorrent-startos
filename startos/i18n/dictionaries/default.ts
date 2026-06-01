@@ -17,10 +17,10 @@ const dict = {
 
   // actions/setAdminPassword.ts
   'Set Admin Password': 8,
-  'Generate a new random password for the qBittorrent web UI admin account. The new password is applied immediately.': 9,
-  'If the service is running, the web UI will disconnect. Restart the service to apply.': 10,
+  'Generate a new random password for the qBittorrent web UI admin account. Requires a service restart to take effect.': 9,
+  'The service must be restarted for the new password to take effect.': 10,
   'Login Credentials': 11,
-  'Use these credentials to sign in to the qBittorrent web UI.': 12,
+  'Use these credentials to sign in to the qBittorrent web UI. Restart the service for the new password to take effect.': 12,
   'Username': 13,
   'Password': 14,
 } as const
