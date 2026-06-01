@@ -92,7 +92,7 @@ The web UI admin password is managed via the **"Set Admin Password"** action in 
 
 The Web UI is reachable by the usual StartOS methods (LAN IP, `<hostname>.local`, Tor `.onion`, or a custom domain). The Web UI guards `HostHeaderValidation` and `CSRFProtection` are disabled in `qBittorrent.conf` so logins work through the StartOS reverse proxy; `LocalHostAuth` is disabled so the password is always required.
 
-**Note:** The peer interface exposes the listening port (TCP 6881) so remote peers can connect inbound. qBittorrent also uses UDP 6881 for DHT/µTP; StartOS exposes the TCP peer port, and reaching your node from the public internet may still require forwarding the port on your router to your StartOS server.
+**Note:** BitTorrent peers are addressed by IP:port, not hostname, so there is no address for qBittorrent to advertise — the public address peers see is whatever the service's **outbound gateway** presents (`System > Gateways`, or per-service via **Actions > Set Outbound Gateway**). The peer interface exposes the listening port (TCP 6881) for inbound connections; reaching it from the public internet requires a gateway that accepts inbound (home router with port `6881` forwarded, or a StartTunnel) — outbound-only VPNs and CGNAT cannot. qBittorrent also uses UDP 6881 for DHT/µTP; only the TCP port is exposed. See [instructions.md](instructions.md) for details.
 
 ---
 
@@ -131,7 +131,7 @@ None.
 ## Limitations and Differences
 
 1. **Download directory** — Downloads persist to `/downloads` on the `main` volume (default save path `/downloads/`). Changing the save path in the Web UI to a location outside `/downloads` or `/config` will not persist across restarts, since only those paths are mounted.
-2. **Peer connectivity** — The TCP peer port (6881) is exposed as a `p2p` interface. qBittorrent also uses UDP 6881 for DHT/µTP; only the TCP port is exposed by the package. Reaching your node from the public internet may require forwarding the port on your router. UPnP/NAT-PMP is disabled.
+2. **Peer connectivity** — The TCP peer port (6881) is exposed as a `p2p` interface for inbound connections. The address peers see you at is defined by the service's outbound gateway, not by qBittorrent (BitTorrent has no hostname to advertise). qBittorrent also uses UDP 6881 for DHT/µTP; only the TCP port is exposed. Inbound peering requires an inbound-capable gateway (home router with the port forwarded, or StartTunnel); outbound-only VPNs and CGNAT cannot accept inbound peers. UPnP/NAT-PMP is disabled.
 3. **Admin password** — Managed via the **"Set Admin Password"** action. Only qBittorrent's PBKDF2 hash is stored on disk (in `store.json` and `qBittorrent.conf`); the plaintext is shown only in the action result at generation time.
 
 ---

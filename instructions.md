@@ -31,8 +31,14 @@
 - Right-click on individual torrents to set per-torrent limits
 - Use **Options > Scheduler** to set automated schedules
 
-## Important Notes
+## Peer Address and Connectivity
 
-- **Peer connectivity**: The TCP peer port (6881) is exposed so remote peers can connect to you. To accept peers from the public internet, forward port `6881` on your router to your StartOS server. UPnP/NAT-PMP is disabled.
+BitTorrent peers find each other by **IP address and port**, not by hostname — there is no "address" for qBittorrent to advertise. The public address other peers see you at is whatever your **outbound gateway** presents to the Internet:
+
+- The gateway is set under **System > Gateways** (the default for all services), or per-service under this service's **Actions > Set Outbound Gateway**. If you route qBittorrent through an outbound VPN, peers and trackers see the VPN's IP instead of your home IP.
+- The TCP peer port (6881) is exposed so remote peers can connect **in**. For that to work, your chosen gateway must accept inbound connections and the port must be reachable: on a home router, forward port `6881` to your StartOS server; commercial/outbound-only VPNs (and ISPs using CGNAT) cannot accept inbound peers — use a StartTunnel gateway if you need inbound peering through a tunnel. UPnP/NAT-PMP is disabled.
+- Without inbound reachability qBittorrent still works — it just can't receive unsolicited peer connections, which can reduce speeds and connectivity for some torrents.
+
+## Important Notes
 - **Downloads location**: Downloaded files are stored under `/downloads` on the `main` volume and are included in backups.
 - **Credentials**: The admin password is generated via the "Set Admin Password" action. Only qBittorrent's PBKDF2 hash is stored on disk — the plaintext is shown only once, in the action result. If you lose it, just run the action again to set a new one.
