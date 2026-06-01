@@ -1,27 +1,21 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import { storeJson } from './fileModels/store.json'
-import { confSubpath, defaultConf, uiPort, upsertPreferences } from './utils'
+import { uiPort } from './utils'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   console.info(i18n('Starting qBittorrent!'))
 
   // Read the password hash reactively, so changing it (via the "Set Admin
-  // Password" action) restarts the service automatically.
+  // Password" action) restarts the service automatically. It is passed to the
+  // configure script (assets/scripts/configure-webui.sh) via QBT_PW_HASH; that
+  // script writes it — and the reverse-proxy flags — into qBittorrent.conf
+  // from INSIDE the container, before qBittorrent starts. (Writing the config
+  // from this host/service context fails: /config/qBittorrent is owned by the
+  // container's PUID, which the service context can't write.)
   const passwordHash = await storeJson
     .read((s) => s.adminPasswordHash)
     .const(effects)
-
-  // Prepare qBittorrent.conf HERE, before the daemon launches — never from the
-  // action while the app is running. qBittorrent rewrites its whole config on
-  // shutdown, so a write made while it runs is clobbered on the next restart;
-  // writing now (the previous instance has already stopped and flushed) is the
-  // last word before start. On first boot this seeds a complete config so the
-  // Web UI loads through the StartOS proxy immediately; thereafter it just
-  // applies the latest password into the config qBittorrent maintains.
-  await applyWebUiConfig(passwordHash)
 
   return sdk.Daemons.of(effects).addDaemon('primary', {
     subcontainer: await sdk.SubContainer.of(
@@ -43,15 +37,28 @@ export const main = sdk.setupMain(async ({ effects }) => {
           subpath: 'downloads',
           mountpoint: '/downloads',
           readonly: false,
+        })
+        // The configure-then-launch wrapper script.
+        .mountAssets({
+          subpath: null,
+          mountpoint: '/assets',
+          type: 'directory',
         }),
       'qbittorrent-sub',
     ),
     exec: {
-      command: sdk.useEntrypoint(),
-      // linuxserver images use s6-overlay, which must run as PID 1.
+      // Configure qBittorrent.conf in-container, then `exec /init` (the
+      // image's s6-overlay entrypoint). runAsInit keeps s6 as PID 1.
+      command: ['sh', '/assets/scripts/configure-webui.sh'],
       runAsInit: true,
-      // linuxserver images drop privileges to PUID:PGID and set TZ.
-      env: { PUID: '1000', PGID: '1000', TZ: 'Etc/UTC' },
+      // linuxserver images drop privileges to PUID:PGID and set TZ;
+      // QBT_PW_HASH carries the admin password hash (empty until set).
+      env: {
+        PUID: '1000',
+        PGID: '1000',
+        TZ: 'Etc/UTC',
+        QBT_PW_HASH: passwordHash ?? '',
+      },
     },
     ready: {
       display: i18n('Web Interface'),
@@ -64,41 +71,3 @@ export const main = sdk.setupMain(async ({ effects }) => {
     requires: [],
   })
 })
-
-/**
- * Ensure qBittorrent.conf has the reverse-proxy-compatibility flags (and the
- * admin password, once set) before the daemon launches.
- *
- * On first boot no config exists yet, so we seed a complete one (`defaultConf`)
- * — qBittorrent then preserves it. The flags must be present from this first
- * boot or the Web UI rejects every proxied request with a blank "Unauthorized".
- * On later boots we upsert into the config qBittorrent maintains, preserving
- * the user's settings.
- */
-async function applyWebUiConfig(passwordHash?: string | null): Promise<void> {
-  const confPath = sdk.volumes.main.subpath(confSubpath)
-
-  let existing: string
-  try {
-    existing = await readFile(confPath, 'utf8')
-  } catch {
-    existing = '' // first boot — seed from defaultConf below
-  }
-
-  const entries: Record<string, string> = {
-    // Required for logins to work behind the StartOS reverse proxy.
-    'WebUI\\HostHeaderValidation': 'false',
-    'WebUI\\CSRFProtection': 'false',
-    // Always require the password — don't let proxy-local requests skip auth.
-    'WebUI\\LocalHostAuth': 'false',
-  }
-  if (passwordHash) {
-    entries['WebUI\\Password_PBKDF2'] = `"${passwordHash}"`
-  }
-
-  const updated = upsertPreferences(existing || defaultConf, entries)
-  if (updated !== existing) {
-    await mkdir(dirname(confPath), { recursive: true })
-    await writeFile(confPath, updated)
-  }
-}

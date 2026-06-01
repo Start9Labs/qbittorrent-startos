@@ -38,7 +38,7 @@ See [instructions.md](instructions.md) for setup instructions.
 | ------------- | -------------------------------------------------- |
 | Image         | `linuxserver/qbittorrent:5.2.1`                     |
 | Architectures | x86_64, aarch64                                    |
-| Command       | Upstream entrypoint (s6-overlay), run as PID 1 via `runAsInit` |
+| Command       | `configure-webui.sh` (writes `qBittorrent.conf`) then `exec /init` (s6-overlay), PID 1 via `runAsInit` |
 | Env           | `PUID=1000`, `PGID=1000`, `TZ=Etc/UTC`             |
 
 ---
@@ -168,10 +168,13 @@ credential_flow: >
   Username is always "admin". Action generates a random 32-char password,
   stores ONLY qBittorrent's PBKDF2 hash (@ByteArray salt:key) in store.json,
   and returns the plaintext once in the action result. A critical task on
-  install prompts the user to run "Set Admin Password". main.ts writes the
-  hash + reverse-proxy flags into qBittorrent.conf BEFORE the daemon starts
-  (never while running — qBittorrent rewrites its config on shutdown). The
-  store change restarts the service automatically via const reactivity.
+  install prompts the user to run "Set Admin Password". main.ts passes the hash
+  to assets/scripts/configure-webui.sh via the QBT_PW_HASH env var; that script
+  writes the hash + reverse-proxy flags into qBittorrent.conf IN-CONTAINER,
+  before launching qBittorrent (the host/service context can't write the
+  PUID-owned /config/qBittorrent dir, and an in-flight write would be lost to
+  qBittorrent's on-shutdown rewrite). The store change restarts the service
+  automatically via const reactivity.
 webui_conf_flags:                 # set so logins work behind the StartOS proxy
   WebUI\HostHeaderValidation: false
   WebUI\CSRFProtection: false

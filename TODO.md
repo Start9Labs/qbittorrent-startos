@@ -24,8 +24,16 @@
 - Writing the config while qBittorrent runs is lost to its on-shutdown rewrite;
   writing before start (as main.ts does) takes effect.
 
+## Resolved
+
+- The host/service context CANNOT write `/config/qBittorrent/qBittorrent.conf`
+  (the container owns it as PUID), so config is now written in-container by
+  `assets/scripts/configure-webui.sh` before `exec /init`. Verified: first-boot
+  Web UI loads (HTTP 200) through a mismatched Host, password login returns 204,
+  save_path=/downloads, listen_port=6881, idempotent across restarts.
+
 ## Not yet verified (needs a real StartOS box)
 
-- That the action/main filesystem context can write the `main` volume's config
-  with the right ownership for the PUID:PGID container user.
 - p2p peer-port reachability end-to-end through the StartOS proxy.
+- mountAssets + the `sh /assets/...` wrapper behave the same under StartOS as in
+  the local docker harness (mechanism mirrors electrs-startos).
