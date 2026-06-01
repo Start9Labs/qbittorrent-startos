@@ -99,7 +99,7 @@ The web UI admin password is managed via the **"Set Admin Password"** action in 
 
 | Action | Description                                    |
 | ------ | ------------------------------------------------ |
-| Set Admin Password | Generate a new random web UI admin password. Requires a service restart to take effect |
+| Set Admin Password | Generate a new random web UI admin password. The service restarts automatically to apply it |
 
 ---
 
@@ -165,6 +165,8 @@ credential_flow: >
   SHA-256 hash only in store.json + qBittorrent.conf.
   Plaintext shown only in action result at generation time.
   Critical task on install prompts user to run "Set Admin Password".
+  Service restarts automatically via const reactivity on password change.
+runAsInit: true  # s6-overlay requires PID 1
 actions:
   - setAdminPassword
 ```

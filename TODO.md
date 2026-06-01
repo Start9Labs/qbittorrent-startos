@@ -1,11 +1,12 @@
 # TODO
 
 - [x] Randomized admin credentials (hash-only storage)
-- [x] Set Admin Password action with config file update
+- [x] Critical task for password via watchAdminPassword
+- [x] runAsInit for s6-overlay compatibility
+- [x] Auto-restart on password change (const reactivity)
 - [ ] Add download directory configuration via actions
 - [ ] Add bandwidth limit configuration via actions
 - [ ] Add peer port configuration via actions
-- [ ] Add icon (max 40 KiB, `.svg`/`.png`/`.jpg`/`.webp`)
 - [ ] Verify install on actual StartOS instance
 - [ ] Verify backup and restore
 - [ ] Publish to registry
