@@ -7,10 +7,11 @@ import { storeJson } from '../fileModels/store.json'
 
 /**
  * On fresh install, generate a random admin password, store it in
- * store.json, and write the SHA-256 hash to the qBittorrent config.
+ * store.json, and write the qBittorrent config with the password hash.
  *
- * Writing the config here (in init) ensures the entrypoint's default
- * copy is skipped on first run, so our password survives the startup.
+ * The config includes the full defaults from the linuxserver/qbittorrent
+ * image plus our WebUI\Password hash. This ensures the entrypoint
+ * finds a valid config on first run and doesn't overwrite it.
  */
 export const initializeService = sdk.setupOnInit(async (effects, kind) => {
   if (kind !== 'install') return
@@ -23,19 +24,39 @@ export const initializeService = sdk.setupOnInit(async (effects, kind) => {
   // Store plaintext password in our store for retrieval by actions
   await storeJson.merge(effects, { adminPassword })
 
-  // Write the WebUI password hash directly to the volume so the
-  // qBittorrent entrypoint finds it on first run and doesn't
-  // overwrite with the default (which has no password = default creds).
+  // Write the qBittorrent config with the password hash
   const passwordHash = createHash('sha256')
     .update(adminPassword)
     .digest('hex')
 
-  const confPath = `${sdk.volumes.main}/qBittorrent/qBittorrent/qBittorrent.conf`
-  await mkdir(`${sdk.volumes.main}/qBittorrent/qBittorrent`, { recursive: true })
+  // Config mirrors the linuxserver default config with WebUI\Password added.
+  // Key: the WebUI\Password line is added to the [Preferences] section.
+  // The entrypoint finds this file on first run and preserves it.
+  const confDir = `${sdk.volumes.main}/qBittorrent/qBittorrent`
+  const confPath = `${confDir}/qBittorrent.conf`
+  await mkdir(confDir, { recursive: true })
 
-  // Minimal config with just the password — the entrypoint merges this
-  // with its defaults, so we only need to set the password here.
-  await writeFile(confPath, `WebUI\\Password=${passwordHash}\n`)
+  await writeFile(
+    confPath,
+    [
+      '[AutoRun]',
+      'enabled=false',
+      'program=',
+      '',
+      '[LegalNotice]',
+      'Accepted=true',
+      '',
+      '[Preferences]',
+      'Connection\\UPnP=false',
+      'Connection\\PortRangeMin=6881',
+      'Downloads\\SavePath=/downloads/',
+      'Downloads\\TempPath=/downloads/incomplete/',
+      'WebUI\\Address=*',
+      'WebUI\\ServerDomains=*',
+      `WebUI\\Password=${passwordHash}`,
+      '',
+    ].join('\n'),
+  )
 
   console.info(i18n('Generated admin password for qBittorrent web UI'))
 })
