@@ -10,6 +10,34 @@ export const peerPort = 6881
 // Verified against linuxserver/qbittorrent:5.2.1.
 export const confSubpath = 'config/qBittorrent/qBittorrent.conf'
 
+// Seed config written on first boot, before qBittorrent has created its own.
+// It must be COMPLETE enough to carry the defaults we depend on: if a config
+// file already exists qBittorrent preserves it and does NOT re-derive these,
+// so a partial seed would leave the save path at /config/Downloads and the
+// listen port randomized. The `WebUI\*` flags make logins work behind the
+// StartOS reverse proxy (HostHeaderValidation/CSRF) and always require the
+// password (LocalHostAuth). Verified against linuxserver/qbittorrent:5.2.1:
+// seeding this yields save_path=/downloads, listen_port=6881, and a Web UI
+// that loads through a mismatched Host header.
+export const defaultConf = `[BitTorrent]
+Session\\DefaultSavePath=/downloads/
+Session\\Port=${peerPort}
+Session\\TempPath=/downloads/incomplete/
+
+[LegalNotice]
+Accepted=true
+
+[Preferences]
+Connection\\PortRangeMin=${peerPort}
+Downloads\\SavePath=/downloads/
+Downloads\\TempPath=/downloads/incomplete/
+WebUI\\Address=*
+WebUI\\CSRFProtection=false
+WebUI\\HostHeaderValidation=false
+WebUI\\LocalHostAuth=false
+WebUI\\ServerDomains=*
+`
+
 /**
  * Compute the value qBittorrent stores in `WebUI\Password_PBKDF2`.
  *

@@ -3,7 +3,7 @@ import { dirname } from 'node:path'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import { storeJson } from './fileModels/store.json'
-import { confSubpath, uiPort, upsertPreferences } from './utils'
+import { confSubpath, defaultConf, uiPort, upsertPreferences } from './utils'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   console.info(i18n('Starting qBittorrent!'))
@@ -14,11 +14,13 @@ export const main = sdk.setupMain(async ({ effects }) => {
     .read((s) => s.adminPasswordHash)
     .const(effects)
 
-  // Apply the password + reverse-proxy flags to qBittorrent.conf HERE, before
-  // the daemon launches — never from the action while the app is running.
-  // qBittorrent rewrites its whole config on shutdown, so a write made while
-  // it runs is clobbered on the next restart. Writing now (the previous
-  // instance has already stopped and flushed) is the last word before start.
+  // Prepare qBittorrent.conf HERE, before the daemon launches — never from the
+  // action while the app is running. qBittorrent rewrites its whole config on
+  // shutdown, so a write made while it runs is clobbered on the next restart;
+  // writing now (the previous instance has already stopped and flushed) is the
+  // last word before start. On first boot this seeds a complete config so the
+  // Web UI loads through the StartOS proxy immediately; thereafter it just
+  // applies the latest password into the config qBittorrent maintains.
   await applyWebUiConfig(passwordHash)
 
   return sdk.Daemons.of(effects).addDaemon('primary', {
@@ -64,10 +66,14 @@ export const main = sdk.setupMain(async ({ effects }) => {
 })
 
 /**
- * Upsert the Web UI password and the reverse-proxy-compatibility flags into
- * the existing qBittorrent.conf. Only touches a config qBittorrent has already
- * created — on the very first boot (no password set yet) it does nothing, so
- * qBittorrent writes its full set of defaults.
+ * Ensure qBittorrent.conf has the reverse-proxy-compatibility flags (and the
+ * admin password, once set) before the daemon launches.
+ *
+ * On first boot no config exists yet, so we seed a complete one (`defaultConf`)
+ * — qBittorrent then preserves it. The flags must be present from this first
+ * boot or the Web UI rejects every proxied request with a blank "Unauthorized".
+ * On later boots we upsert into the config qBittorrent maintains, preserving
+ * the user's settings.
  */
 async function applyWebUiConfig(passwordHash?: string | null): Promise<void> {
   const confPath = sdk.volumes.main.subpath(confSubpath)
@@ -76,9 +82,7 @@ async function applyWebUiConfig(passwordHash?: string | null): Promise<void> {
   try {
     existing = await readFile(confPath, 'utf8')
   } catch {
-    // No config yet (first boot). Let qBittorrent create its defaults; the
-    // password isn't set until the user runs the action anyway.
-    return
+    existing = '' // first boot — seed from defaultConf below
   }
 
   const entries: Record<string, string> = {
@@ -92,7 +96,7 @@ async function applyWebUiConfig(passwordHash?: string | null): Promise<void> {
     entries['WebUI\\Password_PBKDF2'] = `"${passwordHash}"`
   }
 
-  const updated = upsertPreferences(existing, entries)
+  const updated = upsertPreferences(existing || defaultConf, entries)
   if (updated !== existing) {
     await mkdir(dirname(confPath), { recursive: true })
     await writeFile(confPath, updated)
