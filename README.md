@@ -57,10 +57,9 @@ qBittorrent stores:
 ## Installation and First-Run Flow
 
 1. Install the package and start the service.
-2. **Run the "Set Admin Password" action** to generate and retrieve your web UI credentials.
-3. Access the web UI via the StartOS interface link.
-4. Use the credentials from the action result to log in.
-5. Change the password anytime via the **"Set Admin Password"** action.
+2. A **critical task** prompts you to run the **"Set Admin Password"** action.
+3. Run the action — it generates a random password and displays the credentials.
+4. Access the web UI via the StartOS interface link and log in.
 
 ---
 
@@ -100,7 +99,7 @@ The web UI admin password is managed via the **"Set Admin Password"** action in 
 
 | Action | Description                                    |
 | ------ | ------------------------------------------------ |
-| Set Admin Password | Generate a new random web UI admin password and apply it immediately |
+| Set Admin Password | Generate a new random web UI admin password. Requires a service restart to take effect |
 
 ---
 
@@ -110,7 +109,7 @@ The web UI admin password is managed via the **"Set Admin Password"** action in 
 
 - `main` volume (config, torrent files, downloads)
 
-**Restore behavior:** Volume is fully restored before the service starts. The admin password is preserved from the restored `store.json`.
+**Restore behavior:** Volume is fully restored before the service starts. The admin password hash is preserved from the restored store.
 
 ---
 
@@ -133,7 +132,7 @@ None.
 1. **No automatic port forwarding** — qBittorrent's UPnP/NAT-PMP functionality may not work correctly in StartOS networking. Manual port forwarding may be required.
 2. **Download directory** — By default, downloads are stored on the `main` volume. Users should configure the download directory through the web UI to match their desired path.
 3. **Peer connectivity** — For optimal torrent speeds, users should forward port 6881 (TCP/UDP) on their router.
-4. **Randomized admin credentials** — The default `admin`/`adminadmin` credentials are replaced with a random password on install. Use the **"Set Admin Password"** action to view or rotate credentials.
+4. **Admin password** — Managed via the **"Set Admin Password"** action. Only the SHA-256 hash is stored on disk; plaintext is shown only at generation time.
 
 ---
 
@@ -162,7 +161,10 @@ ports:
   peer: 6881
 dependencies: none
 startos_managed_env_vars: none
-credential_flow: randomized password in store.json, SHA-256 hash in qBittorrent config
+credential_flow: >
+  SHA-256 hash only in store.json + qBittorrent.conf.
+  Plaintext shown only in action result at generation time.
+  Critical task on install prompts user to run "Set Admin Password".
 actions:
   - setAdminPassword
 ```

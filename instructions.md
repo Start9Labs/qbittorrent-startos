@@ -4,8 +4,9 @@
 
 1. **Install the package** and start the service.
 2. **Set your admin password**:
-   - In the StartOS UI, click the **"Set Admin Password"** action.
-   - A random password is generated and displayed. The username is always `admin`.
+   - A critical task will prompt you to run the **"Set Admin Password"** action.
+   - Click the action to generate a random password and display your credentials.
+   - The username is always `admin`.
 3. **Log in to the web UI**:
    - Access the interface via the StartOS link.
    - Username: `admin`

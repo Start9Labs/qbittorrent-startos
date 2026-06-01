@@ -21,13 +21,13 @@ export const long = {
 
 export const alertInstall = {
   en_US:
-    'Run the "Set Admin Password" action to generate and retrieve your web UI login credentials.',
+    'Complete the critical task to set your web UI admin password.',
   es_ES:
-    'Ejecute la acción "Establecer contraseña de administrador" para generar y recuperar sus credenciales de inicio de sesión de la interfaz web.',
+    'Complete la tarea crítica para establecer su contraseña de administrador de la interfaz web.',
   de_DE:
-    'Führen Sie die Aktion "Admin-Passwort festlegen" aus, um Ihre Web-UI-Anmeldedaten zu generieren und abzurufen.',
+    'Schließen Sie die kritische Aufgabe ab, um Ihr Admin-Passwort für die Web-Oberfläche festzulegen.',
   pl_PL:
-    'Uruchom akcję "Ustaw hasło administratora", aby wygenerować i pobrać dane logowania do interfejsu internetowego.',
+    'Ukończ krytyczne zadanie, aby ustawić hasło administratora interfejsu internetowego.',
   fr_FR:
-    "Exécutez l'action 'Définir le mot de passe admin' pour générer et récupérer vos identifiants de connexion de l'interface web.",
+    "Terminez la tâche critique pour définir votre mot de passe admin de l'interface web.",
 }
