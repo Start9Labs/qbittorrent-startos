@@ -3,7 +3,7 @@ export const short = {
   es_ES: 'Cliente BitTorrent con interfaz web',
   de_DE: 'BitTorrent-Client mit Webinterface',
   pl_PL: 'Klient BitTorrent z interfejsem internetowym',
-  fr_FR: "Client BitTorrent avec interface web",
+  fr_FR: 'Client BitTorrent avec interface web',
 }
 
 export const long = {
@@ -16,12 +16,11 @@ export const long = {
   pl_PL:
     'qBittorrent to darmowy klient BitTorrent z otwartym kodem źródłowym. Pakiet StartOS udostępnia interfejs internetowy do zarządzania torrentami, konfiguracji ustawień i dostępu do pobranych plików.',
   fr_FR:
-    "qBittorrent est un client BitTorrent gratuit et open source. Le package StartOS fournit une interface web pour gérer les torrents, configurer les paramètres et accéder aux fichiers téléchargés.",
+    'qBittorrent est un client BitTorrent gratuit et open source. Le package StartOS fournit une interface web pour gérer les torrents, configurer les paramètres et accéder aux fichiers téléchargés.',
 }
 
 export const alertInstall = {
-  en_US:
-    'Complete the critical task to set your web UI admin password.',
+  en_US: 'Complete the critical task to set your web UI admin password.',
   es_ES:
     'Complete la tarea crítica para establecer su contraseña de administrador de la interfaz web.',
   de_DE:

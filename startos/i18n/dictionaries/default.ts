@@ -10,6 +10,8 @@ const dict = {
   // interfaces.ts
   'Web UI': 4,
   'The qBittorrent web interface': 5,
+  'BitTorrent Peers': 13,
+  'Inbound BitTorrent peer connections': 14,
 
   // init/watchAdminPassword.ts
   'Set the admin password before signing in': 6,
@@ -19,8 +21,8 @@ const dict = {
   'Generate a new random password for the qBittorrent web UI admin account. The service restarts automatically to apply it.': 8,
   'Login Credentials': 9,
   'Use these credentials to sign in to the qBittorrent web UI. The service is restarting automatically.': 10,
-  'Username': 11,
-  'Password': 12,
+  Username: 11,
+  Password: 12,
 } as const
 
 /**

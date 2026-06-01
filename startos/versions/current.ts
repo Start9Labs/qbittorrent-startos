@@ -7,7 +7,7 @@ export const current = VersionInfo.of({
     es_ES: 'Versión inicial.',
     de_DE: 'Erste Version.',
     pl_PL: 'Wersja początkowa.',
-    fr_FR: "Version initiale.",
+    fr_FR: 'Version initiale.',
   },
   migrations: {
     up: async ({ effects }) => {},

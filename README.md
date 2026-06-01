@@ -38,19 +38,25 @@ See [instructions.md](instructions.md) for setup instructions.
 | ------------- | -------------------------------------------------- |
 | Image         | `linuxserver/qbittorrent:5.2.1`                     |
 | Architectures | x86_64, aarch64                                    |
-| Command       | Uses Dockerfile entrypoint (s6-overlay)            |
+| Command       | Upstream entrypoint (s6-overlay), run as PID 1 via `runAsInit` |
+| Env           | `PUID=1000`, `PGID=1000`, `TZ=Etc/UTC`             |
 
 ---
 
 ## Volume and Data Layout
 
-| Volume | Mount Point | Purpose                          |
-| ------ | ----------- | -------------------------------- |
-| `main` | `/config`   | Config, downloads, and torrents  |
+A single `main` volume holds both config and downloads, mounted into the container at two paths:
+
+| Mount Point  | Volume subpath      | Purpose                                  |
+| ------------ | ------------------- | ---------------------------------------- |
+| `/config`    | `main/config`       | `qBittorrent.conf`, categories, RSS, logs |
+| `/downloads` | `main/downloads`    | Completed and in-progress downloads       |
 
 qBittorrent stores:
-- **Configuration**: `/config/qBittorrent/qBittorrent/qBittorrent.conf`
-- **Downloads**: `/downloads/` (within the container; maps to `/config` on the volume)
+- **Configuration**: `/config/qBittorrent/qBittorrent.conf`
+- **Downloads**: `/downloads/` (and `/downloads/incomplete/`), persisted on the `main` volume
+
+> Both paths must be mounted — qBittorrent's default save path is `/downloads/`, which is a separate location from `/config`. Both are included in backups.
 
 ---
 
@@ -79,19 +85,14 @@ The web UI admin password is managed via the **"Set Admin Password"** action in 
 
 ## Network Access and Interfaces
 
-| Interface | Port | Protocol | Purpose                     |
-| --------- | ---- | -------- | ------------------------- |
-| Web UI    | 8080 | HTTP     | Web interface for management |
-| Peer      | 6881 | TCP/UDP  | BitTorrent peer connections |
+| Interface       | Port | Protocol | Type | Purpose                       |
+| --------------- | ---- | -------- | ---- | ----------------------------- |
+| Web UI          | 8080 | HTTP     | `ui`  | Web interface for management   |
+| BitTorrent Peers| 6881 | TCP      | `p2p` | Inbound BitTorrent peer connections |
 
-**Access methods:**
+The Web UI is reachable by the usual StartOS methods (LAN IP, `<hostname>.local`, Tor `.onion`, or a custom domain). The Web UI guards `HostHeaderValidation` and `CSRFProtection` are disabled in `qBittorrent.conf` so logins work through the StartOS reverse proxy; `LocalHostAuth` is disabled so the password is always required.
 
-- LAN IP with unique port
-- `<hostname>.local` with unique port
-- Tor `.onion` address
-- Custom domains (if configured)
-
-**Note:** BitTorrent peer connections on port 6881 use raw TCP/UDP and are not exposed through StartOS interfaces. Users may need to forward this port on their router for optimal peer connectivity.
+**Note:** The peer interface exposes the listening port (TCP 6881) so remote peers can connect inbound. qBittorrent also uses UDP 6881 for DHT/µTP; StartOS exposes the TCP peer port, and reaching your node from the public internet may still require forwarding the port on your router to your StartOS server.
 
 ---
 
@@ -129,10 +130,9 @@ None.
 
 ## Limitations and Differences
 
-1. **No automatic port forwarding** — qBittorrent's UPnP/NAT-PMP functionality may not work correctly in StartOS networking. Manual port forwarding may be required.
-2. **Download directory** — By default, downloads are stored on the `main` volume. Users should configure the download directory through the web UI to match their desired path.
-3. **Peer connectivity** — For optimal torrent speeds, users should forward port 6881 (TCP/UDP) on their router.
-4. **Admin password** — Managed via the **"Set Admin Password"** action. Only the SHA-256 hash is stored on disk; plaintext is shown only at generation time.
+1. **Download directory** — Downloads persist to `/downloads` on the `main` volume (default save path `/downloads/`). Changing the save path in the Web UI to a location outside `/downloads` or `/config` will not persist across restarts, since only those paths are mounted.
+2. **Peer connectivity** — The TCP peer port (6881) is exposed as a `p2p` interface. qBittorrent also uses UDP 6881 for DHT/µTP; only the TCP port is exposed by the package. Reaching your node from the public internet may require forwarding the port on your router. UPnP/NAT-PMP is disabled.
+3. **Admin password** — Managed via the **"Set Admin Password"** action. Only qBittorrent's PBKDF2 hash is stored on disk (in `store.json` and `qBittorrent.conf`); the plaintext is shown only in the action result at generation time.
 
 ---
 
@@ -154,19 +154,29 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development wo
 package_id: qbittorrent
 image: linuxserver/qbittorrent:5.2.1
 architectures: [x86_64, aarch64]
+env: { PUID: 1000, PGID: 1000, TZ: Etc/UTC }
 volumes:
-  main: /config
-ports:
-  ui: 8080
-  peer: 6881
+  main:
+    /config: main/config        # qBittorrent.conf, categories, RSS, logs
+    /downloads: main/downloads   # completed + incomplete downloads
+interfaces:
+  ui: { port: 8080, protocol: http, type: ui }
+  peer: { port: 6881, protocol: tcp, type: p2p }   # inbound BitTorrent peers
 dependencies: none
 startos_managed_env_vars: none
 credential_flow: >
-  SHA-256 hash only in store.json + qBittorrent.conf.
-  Plaintext shown only in action result at generation time.
-  Critical task on install prompts user to run "Set Admin Password".
-  Service restarts automatically via const reactivity on password change.
-runAsInit: true  # s6-overlay requires PID 1
+  Username is always "admin". Action generates a random 32-char password,
+  stores ONLY qBittorrent's PBKDF2 hash (@ByteArray salt:key) in store.json,
+  and returns the plaintext once in the action result. A critical task on
+  install prompts the user to run "Set Admin Password". main.ts writes the
+  hash + reverse-proxy flags into qBittorrent.conf BEFORE the daemon starts
+  (never while running — qBittorrent rewrites its config on shutdown). The
+  store change restarts the service automatically via const reactivity.
+webui_conf_flags:                 # set so logins work behind the StartOS proxy
+  WebUI\HostHeaderValidation: false
+  WebUI\CSRFProtection: false
+  WebUI\LocalHostAuth: false
+runAsInit: true  # linuxserver s6-overlay requires PID 1
 actions:
   - setAdminPassword
 ```

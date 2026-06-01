@@ -15,6 +15,8 @@ export default {
     10: 'Use estas credenciales para iniciar sesión en la interfaz web de qBittorrent. El servicio se está reiniciando automáticamente.',
     11: 'Nombre de usuario',
     12: 'Contraseña',
+    13: 'Pares de BitTorrent',
+    14: 'Conexiones entrantes de pares de BitTorrent',
   },
   de_DE: {
     0: 'qBittorrent wird gestartet!',
@@ -30,6 +32,8 @@ export default {
     10: 'Verwenden Sie diese Anmeldeinformationen, um sich bei der qBittorrent-Weboberfläche anzumelden. Der Dienst wird automatisch neu gestartet.',
     11: 'Benutzername',
     12: 'Passwort',
+    13: 'BitTorrent-Peers',
+    14: 'Eingehende BitTorrent-Peer-Verbindungen',
   },
   pl_PL: {
     0: 'Uruchamianie qBittorrent!',
@@ -45,6 +49,8 @@ export default {
     10: 'Użyj tych danych logowania, aby zalogować się do interfejsu internetowego qBittorrent. Usługa restartuje się automatycznie.',
     11: 'Nazwa użytkownika',
     12: 'Hasło',
+    13: 'Peery BitTorrent',
+    14: 'Przychodzące połączenia peerów BitTorrent',
   },
   fr_FR: {
     0: 'Démarrage de qBittorrent !',
@@ -53,12 +59,14 @@ export default {
     3: "L'interface web n'est pas prête",
     4: 'Interface web',
     5: "L'interface web de qBittorrent",
-    6: "Définissez le mot de passe admin avant de vous connecter",
-    7: "Définir le mot de passe admin",
+    6: 'Définissez le mot de passe admin avant de vous connecter',
+    7: 'Définir le mot de passe admin',
     8: "Générer un nouveau mot de passe aléatoire pour le compte admin de l'interface web qBittorrent. Le service redémarre automatiquement pour l'appliquer.",
     9: 'Identifiants de connexion',
     10: "Utilisez ces identifiants pour vous connecter à l'interface web qBittorrent. Le service redémarre automatiquement.",
     11: "Nom d'utilisateur",
     12: 'Mot de passe',
+    13: 'Pairs BitTorrent',
+    14: 'Connexions entrantes de pairs BitTorrent',
   },
 } satisfies Record<string, LangDict>
