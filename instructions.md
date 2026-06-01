@@ -3,10 +3,14 @@
 ## Getting Started
 
 1. **Install the package** and start the service.
-2. **Log in to the web UI**:
+2. **Set your admin password**:
+   - In the StartOS UI, click the **"Set Admin Password"** action.
+   - A random password is generated and displayed. The username is always `admin`.
+3. **Log in to the web UI**:
+   - Access the interface via the StartOS link.
    - Username: `admin`
-   - Password: Generated randomly on install. Use the **"Set Admin Password"** action in StartOS to retrieve it.
-3. **Change your password** anytime via the **"Set Admin Password"** action or through the qBittorrent web UI: **Tools > Set up the Web UI > Authentication**.
+   - Password: the value shown by the action.
+4. **Rotate your password** anytime by running **"Set Admin Password"** again.
 
 ## Configuring Downloads
 
@@ -31,4 +35,4 @@
 - **Port forwarding**: For optimal torrent speeds, forward port `6881` (TCP/UDP) on your router to your StartOS server.
 - **UPnP**: qBittorrent's UPnP/NAT-PMP may not work in the StartOS networking environment. Use manual port forwarding instead.
 - **Downloads location**: All downloaded files are stored on the `main` volume. The backup includes all downloaded content.
-- **Credentials**: Admin credentials are randomized on install. The password is stored in the StartOS service store and applied to the qBittorrent config automatically.
+- **Credentials**: Admin password is generated via the "Set Admin Password" action. Only the password hash is stored on disk — plaintext is shown only at generation time.

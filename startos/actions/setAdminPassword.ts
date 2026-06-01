@@ -25,28 +25,27 @@ export const setAdminPassword = sdk.Action.withoutInput(
       len: 32,
     })
 
-    // Store plaintext password in our store
-    await storeJson.merge(effects, { adminPassword })
-
-    // Write SHA-256 hash to qBittorrent config so it takes effect
     const passwordHash = createHash('sha256')
       .update(adminPassword)
       .digest('hex')
 
+    // Store only the hash — never plaintext
+    await storeJson.merge(effects, { adminPasswordHash: passwordHash })
+
+    // Write SHA-256 hash to qBittorrent config so it takes effect
     const confDir = `${sdk.volumes.main}/qBittorrent/qBittorrent`
     const confPath = `${confDir}/qBittorrent.conf`
-
     await mkdir(confDir, { recursive: true })
 
-    // Read existing config to preserve other settings, then update the password line
+    // Read existing config to preserve other settings
     let existingContent = ''
     try {
       existingContent = (await readFile(confPath, 'utf8')).toString()
     } catch {
-      // File doesn't exist yet — happens on first password set
+      // Config doesn't exist yet
     }
 
-    // Replace any existing WebUI\Password line, or add it if missing
+    // Replace or add the WebUI\Password line
     const passwordLine = `WebUI\\Password=${passwordHash}`
     const updatedContent = existingContent
       ? existingContent

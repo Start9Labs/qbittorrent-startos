@@ -57,9 +57,10 @@ qBittorrent stores:
 ## Installation and First-Run Flow
 
 1. Install the package and start the service.
-2. On install, a random admin password is generated automatically.
+2. **Run the "Set Admin Password" action** to generate and retrieve your web UI credentials.
 3. Access the web UI via the StartOS interface link.
-4. The credentials are shown in the install alert. Use the **"Set Admin Password"** action to retrieve or change them.
+4. Use the credentials from the action result to log in.
+5. Change the password anytime via the **"Set Admin Password"** action.
 
 ---
 

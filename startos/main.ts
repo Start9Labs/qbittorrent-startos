@@ -7,26 +7,21 @@ export const main = sdk.setupMain(async ({ effects }) => {
   /**
    * ======================== Setup ========================
    *
-   * Read the admin password reactively — if it changes (e.g. via
+   * Read the password hash reactively — if it changes (e.g. via
    * the "Set Admin Password" action), the service restarts.
    */
   console.info(i18n('Starting qBittorrent!'))
 
-  const adminPassword = await storeJson
-    .read((s) => s.adminPassword)
+  const adminPasswordHash = await storeJson
+    .read((s) => s.adminPasswordHash)
     .const(effects)
 
-  if (!adminPassword) {
+  if (!adminPasswordHash) {
     throw new Error(i18n('Admin password not set. Run "Set Admin Password" action first.'))
   }
 
   /**
    * ======================== Daemons ========================
-   *
-   * The volume is mounted at /config (linuxserver/qbittorrent convention).
-   * The qBittorrent config is at /config/qBittorrent/qBittorrent/qBittorrent.conf
-   * and contains the WebUI password hash set during install or via the
-   * "Set Admin Password" action.
    */
   return sdk.Daemons.of(effects).addDaemon('primary', {
     subcontainer: await sdk.SubContainer.of(

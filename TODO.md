@@ -1,6 +1,6 @@
 # TODO
 
-- [x] Randomized admin credentials on install
+- [x] Randomized admin credentials (hash-only storage)
 - [x] Set Admin Password action with config file update
 - [ ] Add download directory configuration via actions
 - [ ] Add bandwidth limit configuration via actions

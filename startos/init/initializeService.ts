@@ -6,32 +6,28 @@ import { sdk } from '../sdk'
 import { storeJson } from '../fileModels/store.json'
 
 /**
- * On fresh install, generate a random admin password, store it in
- * store.json, and write the qBittorrent config with the password hash.
+ * On fresh install, generate a random admin password, write the SHA-256
+ * hash to the qBittorrent config and to store.json. The user runs the
+ * "Set Admin Password" action to generate and view their credentials.
  *
- * The config includes the full defaults from the linuxserver/qbittorrent
- * image plus our WebUI\Password hash. This ensures the entrypoint
- * finds a valid config on first run and doesn't overwrite it.
+ * Plaintext is never persisted — only the hash is stored.
  */
 export const initializeService = sdk.setupOnInit(async (effects, kind) => {
   if (kind !== 'install') return
 
+  // Generate a temporary password so the config has a valid hash.
+  // The user will replace it via the "Set Admin Password" action.
   const adminPassword = utils.getDefaultString({
     charset: 'a-z,A-Z,0-9',
     len: 32,
   })
 
-  // Store plaintext password in our store for retrieval by actions
-  await storeJson.merge(effects, { adminPassword })
+  const passwordHash = createHash('sha256').update(adminPassword).digest('hex')
 
-  // Write the qBittorrent config with the password hash
-  const passwordHash = createHash('sha256')
-    .update(adminPassword)
-    .digest('hex')
+  // Store only the hash — never plaintext
+  await storeJson.merge(effects, { adminPasswordHash: passwordHash })
 
-  // Config mirrors the linuxserver default config with WebUI\Password added.
-  // Key: the WebUI\Password line is added to the [Preferences] section.
-  // The entrypoint finds this file on first run and preserves it.
+  // Write full qBittorrent config with the password hash
   const confDir = `${sdk.volumes.main}/qBittorrent/qBittorrent`
   const confPath = `${confDir}/qBittorrent.conf`
   await mkdir(confDir, { recursive: true })
@@ -58,5 +54,5 @@ export const initializeService = sdk.setupOnInit(async (effects, kind) => {
     ].join('\n'),
   )
 
-  console.info(i18n('Generated admin password for qBittorrent web UI'))
+  console.info(i18n('Run the "Set Admin Password" action to set your web UI credentials'))
 })

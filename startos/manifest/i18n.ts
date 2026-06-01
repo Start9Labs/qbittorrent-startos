@@ -8,26 +8,26 @@ export const short = {
 
 export const long = {
   en_US:
-    'qBittorrent is a free and open-source BitTorrent client. The StartOS package provides a web UI for managing torrents, configuring settings, and accessing downloaded files. Uses the official linuxserver/qbittorrent Docker image.',
+    'qBittorrent is a free and open-source BitTorrent client. The StartOS package provides a web UI for managing torrents, configuring settings, and accessing downloaded files. Uses the linuxserver/qbittorrent Docker image.',
   es_ES:
-    'qBittorrent es un cliente BitTorrent gratuito y de código abierto. El paquete de StartOS proporciona una interfaz web para gestionar torrents, configurar ajustes y acceder a archivos descargados. Usa la imagen Docker oficial de linuxserver/qbittorrent.',
+    'qBittorrent es un cliente BitTorrent gratuito y de código abierto. El paquete de StartOS proporciona una interfaz web para gestionar torrents, configurar ajustes y acceder a archivos descargados.',
   de_DE:
     'qBittorrent ist ein kostenloser BitTorrent-Client mit offenen Quellcode. Das StartOS-Paket bietet ein Webinterface zur Verwaltung von Torrents, Konfiguration von Einstellungen und Zugriff auf heruntergeladene Dateien.',
   pl_PL:
-    'qBittorrent to darmowy klient BitTorrent z otwartym kodem źródłowym. Pakiet StartOS udostępnia interfejs internetowy do zarządzania torrentami, konfiguracji ustawień i dostępu do pobranych plików. Używa oficjalnego obrazu Docker linuxserver/qbittorrent.',
+    'qBittorrent to darmowy klient BitTorrent z otwartym kodem źródłowym. Pakiet StartOS udostępnia interfejs internetowy do zarządzania torrentami, konfiguracji ustawień i dostępu do pobranych plików.',
   fr_FR:
-    "qBittorrent est un client BitTorrent gratuit et open source. Le package StartOS fournit une interface web pour gérer les torrents, configurer les paramètres et accéder aux fichiers téléchargés. Utilise l'image Docker officielle linuxserver/qbittorrent.",
+    "qBittorrent est un client BitTorrent gratuit et open source. Le package StartOS fournit une interface web pour gérer les torrents, configurer les paramètres et accéder aux fichiers téléchargés.",
 }
 
 export const alertInstall = {
   en_US:
-    'After installation, check the "Set Admin Password" action result for your login credentials.',
+    'Run the "Set Admin Password" action to generate and retrieve your web UI login credentials.',
   es_ES:
-    'Después de la instalación, revise el resultado de la acción "Establecer contraseña de administrador" para obtener sus credenciales de inicio de sesión.',
+    'Ejecute la acción "Establecer contraseña de administrador" para generar y recuperar sus credenciales de inicio de sesión de la interfaz web.',
   de_DE:
-    'Nach der Installation überprüfen Sie das Ergebnis der Aktion "Admin-Passwort festlegen" für Ihre Anmeldeinformationen.',
+    'Führen Sie die Aktion "Admin-Passwort festlegen" aus, um Ihre Web-UI-Anmeldedaten zu generieren und abzurufen.',
   pl_PL:
-    'Po instalacji sprawdź wynik akcji "Ustaw hasło administratora", aby uzyskać dane logowania.',
+    'Uruchom akcję "Ustaw hasło administratora", aby wygenerować i pobrać dane logowania do interfejsu internetowego.',
   fr_FR:
-    "Après l'installation, consultez le résultat de l'action 'Définir le mot de passe admin' pour vos identifiants de connexion.",
+    "Exécutez l'action 'Définir le mot de passe admin' pour générer et récupérer vos identifiants de connexion de l'interface web.",
 }

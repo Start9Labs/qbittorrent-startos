@@ -13,7 +13,7 @@ const dict = {
   'The qBittorrent web interface': 6,
 
   // init/initializeService.ts
-  'Generated admin password for qBittorrent web UI': 7,
+  'Run the "Set Admin Password" action to set your web UI credentials': 7,
 
   // actions/setAdminPassword.ts
   'Set Admin Password': 8,
