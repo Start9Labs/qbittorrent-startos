@@ -1,17 +1,17 @@
 # qBittorrent Instructions
 
-## First Steps
+## Getting Started
 
-1. **Access the Web UI** — Click the interface link in StartOS to open the qBittorrent web interface.
-2. **Log in** — Use the default credentials:
+1. **Install the package** and start the service.
+2. **Log in to the web UI**:
    - Username: `admin`
-   - Password: `adminadmin`
-3. **Change your password** — Navigate to **Tools > Set up the Web UI > Authentication** and set a new password.
+   - Password: Generated randomly on install. Use the **"Set Admin Password"** action in StartOS to retrieve it.
+3. **Change your password** anytime via the **"Set Admin Password"** action or through the qBittorrent web UI: **Tools > Set up the Web UI > Authentication**.
 
 ## Configuring Downloads
 
 1. Go to **Tools > Options > Directories** to set your download and incomplete files paths.
-2. The default download directory is `/data/BT_backup/`.
+2. The default download directory is `/downloads/`.
 3. You can add custom download folders and configure automatic file management.
 
 ## Adding Torrents
@@ -31,3 +31,4 @@
 - **Port forwarding**: For optimal torrent speeds, forward port `6881` (TCP/UDP) on your router to your StartOS server.
 - **UPnP**: qBittorrent's UPnP/NAT-PMP may not work in the StartOS networking environment. Use manual port forwarding instead.
 - **Downloads location**: All downloaded files are stored on the `main` volume. The backup includes all downloaded content.
+- **Credentials**: Admin credentials are randomized on install. The password is stored in the StartOS service store and applied to the qBittorrent config automatically.

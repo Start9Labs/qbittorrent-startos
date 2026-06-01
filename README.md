@@ -34,11 +34,11 @@ See [instructions.md](instructions.md) for setup instructions.
 
 ## Image and Container Runtime
 
-| Property      | Value                                        |
-| ------------- | ------------------------------------------ |
-| Image         | `linuxserver/qbittorrent:5.2.1`       |
-| Architectures | x86_64, aarch64                              |
-| Command       | Uses Dockerfile entrypoint                 |
+| Property      | Value                                              |
+| ------------- | -------------------------------------------------- |
+| Image         | `linuxserver/qbittorrent:5.2.1`                     |
+| Architectures | x86_64, aarch64                                    |
+| Command       | Uses Dockerfile entrypoint (s6-overlay)            |
 
 ---
 
@@ -46,22 +46,20 @@ See [instructions.md](instructions.md) for setup instructions.
 
 | Volume | Mount Point | Purpose                          |
 | ------ | ----------- | -------------------------------- |
-| `main` | `/data`     | Config, torrents, and downloads  |
+| `main` | `/config`   | Config, downloads, and torrents  |
 
-By default, qBittorrent stores:
-- **Configuration**: `/data/qBittorrent/` (config files, cookies, settings)
-- **Downloads**: `/data/BT_backup/` (incomplete torrents) and download directory
-
-Users can change the download directory through the web UI.
+qBittorrent stores:
+- **Configuration**: `/config/qBittorrent/qBittorrent/qBittorrent.conf`
+- **Downloads**: `/downloads/` (within the container; maps to `/config` on the volume)
 
 ---
 
 ## Installation and First-Run Flow
 
 1. Install the package and start the service.
-2. Access the web UI via the StartOS interface link.
-3. Default credentials: `admin` / `adminadmin`.
-4. Change the password via the web UI: **Tools > Set up the Web UI > Authentication**.
+2. On install, a random admin password is generated automatically.
+3. Access the web UI via the StartOS interface link.
+4. The credentials are shown in the install alert. Use the **"Set Admin Password"** action to retrieve or change them.
 
 ---
 
@@ -74,6 +72,8 @@ All configuration is managed through the qBittorrent web UI. Key settings includ
 - **Bandwidth Limits**: configurable via the web UI
 - **DHT/Peering**: enabled by default
 - **UPnP/NAT-PMP**: configurable via the web UI
+
+The web UI admin password is managed via the **"Set Admin Password"** action in StartOS.
 
 ---
 
@@ -99,7 +99,7 @@ All configuration is managed through the qBittorrent web UI. Key settings includ
 
 | Action | Description                                    |
 | ------ | ------------------------------------------------ |
-| Set Admin Password | Generate a new random admin password |
+| Set Admin Password | Generate a new random web UI admin password and apply it immediately |
 
 ---
 
@@ -109,7 +109,7 @@ All configuration is managed through the qBittorrent web UI. Key settings includ
 
 - `main` volume (config, torrent files, downloads)
 
-**Restore behavior:** Volume is fully restored before the service starts.
+**Restore behavior:** Volume is fully restored before the service starts. The admin password is preserved from the restored `store.json`.
 
 ---
 
@@ -130,8 +130,9 @@ None.
 ## Limitations and Differences
 
 1. **No automatic port forwarding** — qBittorrent's UPnP/NAT-PMP functionality may not work correctly in StartOS networking. Manual port forwarding may be required.
-2. **Download directory** — By default, downloads are stored in the `main` volume. Users should configure the download directory through the web UI to match their desired path.
+2. **Download directory** — By default, downloads are stored on the `main` volume. Users should configure the download directory through the web UI to match their desired path.
 3. **Peer connectivity** — For optimal torrent speeds, users should forward port 6881 (TCP/UDP) on their router.
+4. **Randomized admin credentials** — The default `admin`/`adminadmin` credentials are replaced with a random password on install. Use the **"Set Admin Password"** action to view or rotate credentials.
 
 ---
 
@@ -154,13 +155,13 @@ package_id: qbittorrent
 image: linuxserver/qbittorrent:5.2.1
 architectures: [x86_64, aarch64]
 volumes:
-  main: /data
+  main: /config
 ports:
   ui: 8080
   peer: 6881
 dependencies: none
 startos_managed_env_vars: none
-default_credentials: admin/adminadmin
+credential_flow: randomized password in store.json, SHA-256 hash in qBittorrent config
 actions:
   - setAdminPassword
 ```

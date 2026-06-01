@@ -6,18 +6,23 @@ const dict = {
   'Web Interface': 1,
   'The web interface is ready': 2,
   'The web interface is not ready': 3,
+  'Admin password not set. Run "Set Admin Password" action first.': 4,
 
   // interfaces.ts
-  'Web UI': 4,
-  'The qBittorrent web interface': 5,
+  'Web UI': 5,
+  'The qBittorrent web interface': 6,
+
+  // init/initializeService.ts
+  'Generated admin password for qBittorrent web UI': 7,
 
   // actions/setAdminPassword.ts
-  'Set Admin Password': 6,
-  'Generate a new random admin password for qBittorrent. Applies the new password via the web API.': 7,
-  'Login Credentials': 8,
-  'Use these credentials to sign in to the qBittorrent web UI.': 9,
-  'Username': 10,
-  'Password': 11,
+  'Set Admin Password': 8,
+  'Generate a new random password for the qBittorrent web UI admin account. The new password is applied immediately.': 9,
+  'If the service is running, the web UI will disconnect. Restart the service to apply.': 10,
+  'Login Credentials': 11,
+  'Use these credentials to sign in to the qBittorrent web UI.': 12,
+  'Username': 13,
+  'Password': 14,
 } as const
 
 /**
