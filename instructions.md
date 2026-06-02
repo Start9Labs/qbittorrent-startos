@@ -11,7 +11,7 @@
    - Access the interface via the StartOS link.
    - Username: `admin`
    - Password: the value shown by the action.
-4. **Rotate your password** anytime by running **"Set Admin Password"** again.
+4. **Rotate your password** anytime by running **"Reset Admin Password"** (the action is renamed from "Set Admin Password" once a password has been set).
 
 ## Configuring Downloads
 
@@ -55,4 +55,4 @@ BitTorrent peers find each other by **IP address and port**, not by hostname —
 
 ## Important Notes
 - **Downloads location**: Downloaded files are stored under `/downloads` on the `main` volume by default (included in backups), or inside **File Browser** if you select it via the "Set Download Location" action.
-- **Credentials**: The admin password is generated via the "Set Admin Password" action. Only qBittorrent's PBKDF2 hash is stored on disk — the plaintext is shown only once, in the action result. If you lose it, just run the action again to set a new one.
+- **Credentials**: The admin password is generated via the "Set Admin Password" action (renamed "Reset Admin Password" after first use). Only qBittorrent's PBKDF2 hash is stored on disk — the plaintext is shown only once, in the action result. If you lose it, just run the action again to set a new one.

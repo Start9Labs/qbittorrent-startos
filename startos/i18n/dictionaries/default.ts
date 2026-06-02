@@ -18,6 +18,7 @@ const dict = {
 
   // actions/setAdminPassword.ts
   'Set Admin Password': 7,
+  'Reset Admin Password': 23,
   'Generate a new random password for the qBittorrent web UI admin account.': 8,
   'Login Credentials': 9,
   'Use these credentials to sign in to the qBittorrent web UI.': 10,

@@ -79,7 +79,7 @@ All configuration is managed through the qBittorrent web UI. Key settings includ
 - **DHT/Peering**: enabled by default
 - **UPnP/NAT-PMP**: configurable via the web UI
 
-The web UI admin password is managed via the **"Set Admin Password"** action in StartOS. The download location is managed via the **"Set Download Location"** action (see below).
+The web UI admin password is managed via the **"Set Admin Password"** action in StartOS (shown as **"Reset Admin Password"** once a password exists). The download location is managed via the **"Set Download Location"** action (see below).
 
 ### Download Location (local or File Browser)
 
@@ -112,7 +112,7 @@ The Web UI is reachable by the usual StartOS methods (LAN IP, `<hostname>.local`
 
 | Action | Description                                    |
 | ------ | ------------------------------------------------ |
-| Set Admin Password | Generate a new random web UI admin password |
+| Set Admin Password | Generate a new random web UI admin password. Renamed to **Reset Admin Password** once a password has been set |
 | Set Download Location | Choose where completed downloads are saved — local storage or a subfolder inside File Browser |
 
 ---

@@ -6,16 +6,25 @@ import { qbPasswordPbkdf2 } from '../utils'
 
 export const setAdminPassword = sdk.Action.withoutInput(
   'set-admin-password',
-  async () => ({
-    name: i18n('Set Admin Password'),
-    description: i18n(
-      'Generate a new random password for the qBittorrent web UI admin account.',
-    ),
-    warning: null,
-    allowedStatuses: 'any',
-    group: null,
-    visibility: 'enabled',
-  }),
+  async ({ effects }) => {
+    // Once a password has been set, the action is a rotation, not a first-time
+    // setup — reflect that in the name.
+    const alreadySet = !!(await storeJson
+      .read((s) => s.adminPasswordHash)
+      .const(effects))
+    return {
+      name: alreadySet
+        ? i18n('Reset Admin Password')
+        : i18n('Set Admin Password'),
+      description: i18n(
+        'Generate a new random password for the qBittorrent web UI admin account.',
+      ),
+      warning: null,
+      allowedStatuses: 'any',
+      group: null,
+      visibility: 'enabled',
+    }
+  },
   async ({ effects }) => {
     const adminPassword = utils.getDefaultString({
       charset: 'a-z,A-Z,0-9',

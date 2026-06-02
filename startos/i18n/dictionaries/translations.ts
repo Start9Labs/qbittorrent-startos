@@ -25,6 +25,7 @@ export default {
     20: 'File Browser',
     21: 'Subcarpeta de File Browser',
     22: 'Carpeta dentro de File Browser donde se guardan las descargas. Se crea automáticamente; File Browser debe estar instalado.',
+    23: 'Restablecer contraseña de administrador',
   },
   de_DE: {
     0: 'qBittorrent wird gestartet!',
@@ -50,6 +51,7 @@ export default {
     20: 'File Browser',
     21: 'File-Browser-Unterordner',
     22: 'Ordner in File Browser, in dem Downloads gespeichert werden. Wird automatisch erstellt; File Browser muss installiert sein.',
+    23: 'Admin-Passwort zurücksetzen',
   },
   pl_PL: {
     0: 'Uruchamianie qBittorrent!',
@@ -75,6 +77,7 @@ export default {
     20: 'File Browser',
     21: 'Podfolder File Browser',
     22: 'Folder w File Browser, w którym zapisywane są pobrania. Tworzony automatycznie; File Browser musi być zainstalowany.',
+    23: 'Zresetuj hasło administratora',
   },
   fr_FR: {
     0: 'Démarrage de qBittorrent !',
@@ -100,5 +103,6 @@ export default {
     20: 'File Browser',
     21: 'Sous-dossier File Browser',
     22: 'Dossier dans File Browser où les téléchargements sont enregistrés. Créé automatiquement ; File Browser doit être installé.',
+    23: 'Réinitialiser le mot de passe admin',
   },
 } satisfies Record<string, LangDict>
