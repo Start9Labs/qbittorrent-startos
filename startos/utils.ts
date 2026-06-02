@@ -5,6 +5,10 @@ export const uiPort = 8080
 // Must match the peer port written in assets/scripts/configure-webui.sh
 export const peerPort = 6881
 
+// Where File Browser's data volume is mounted inside the qBittorrent container
+// when the user routes downloads there (see main.ts + setDownloadLocation).
+export const filebrowserMountpoint = '/mnt/filebrowser'
+
 /**
  * Compute the value qBittorrent stores in `WebUI\Password_PBKDF2`.
  *

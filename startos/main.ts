@@ -1,7 +1,8 @@
+import { manifest as filebrowserManifest } from 'filebrowser-startos/startos/manifest'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import { storeJson } from './fileModels/store.json'
-import { uiPort } from './utils'
+import { filebrowserMountpoint, uiPort } from './utils'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   console.info(i18n('Starting qBittorrent!'))
@@ -17,33 +18,64 @@ export const main = sdk.setupMain(async ({ effects }) => {
     .read((s) => s.adminPasswordHash)
     .const(effects)
 
+  // Where downloads are saved (set via the "Set Download Location" action).
+  // Read reactively so switching target restarts the service and re-mounts.
+  const downloadTarget = await storeJson
+    .read((s) => s.downloadTarget)
+    .const(effects)
+  const filebrowserSubpath = await storeJson
+    .read((s) => s.filebrowserSubpath)
+    .const(effects)
+
+  let mounts = sdk.Mounts.of()
+    // App config (qBittorrent.conf, categories, RSS, logs, …)
+    .mountVolume({
+      volumeId: 'main',
+      subpath: 'config',
+      mountpoint: '/config',
+      readonly: false,
+    })
+    // Downloaded content + incomplete files. The image's default save
+    // path is `/downloads/`; without this mount, downloads land on the
+    // container's ephemeral filesystem and are lost on every restart.
+    .mountVolume({
+      volumeId: 'main',
+      subpath: 'downloads',
+      mountpoint: '/downloads',
+      readonly: false,
+    })
+    // The configure-then-launch wrapper script.
+    .mountAssets({
+      subpath: null,
+      mountpoint: '/assets',
+      type: 'directory',
+    })
+
+  // The save path handed to qBittorrent. Local downloads stay on this
+  // service's own volume; File Browser downloads go into a subfolder of File
+  // Browser's data volume, mounted read-write here. File Browser serves that
+  // volume as uid 1000 — the same uid qBittorrent's PUID drops to — so files
+  // qBittorrent writes are immediately readable and browsable there.
+  let savePath = '/downloads'
+  if (downloadTarget === 'filebrowser') {
+    const subfolder =
+      (filebrowserSubpath ?? 'qbittorrent').replace(/^\/+|\/+$/g, '') ||
+      'qbittorrent'
+    savePath = `${filebrowserMountpoint}/${subfolder}`
+    mounts = mounts.mountDependency<typeof filebrowserManifest>({
+      dependencyId: 'filebrowser',
+      volumeId: 'data',
+      subpath: null,
+      mountpoint: filebrowserMountpoint,
+      readonly: false,
+    })
+  }
+
   return sdk.Daemons.of(effects).addDaemon('primary', {
     subcontainer: await sdk.SubContainer.of(
       effects,
       { imageId: 'qbittorrent' },
-      sdk.Mounts.of()
-        // App config (qBittorrent.conf, categories, RSS, logs, …)
-        .mountVolume({
-          volumeId: 'main',
-          subpath: 'config',
-          mountpoint: '/config',
-          readonly: false,
-        })
-        // Downloaded content + incomplete files. The image's default save
-        // path is `/downloads/`; without this mount, downloads land on the
-        // container's ephemeral filesystem and are lost on every restart.
-        .mountVolume({
-          volumeId: 'main',
-          subpath: 'downloads',
-          mountpoint: '/downloads',
-          readonly: false,
-        })
-        // The configure-then-launch wrapper script.
-        .mountAssets({
-          subpath: null,
-          mountpoint: '/assets',
-          type: 'directory',
-        }),
+      mounts,
       'qbittorrent-sub',
     ),
     exec: {
@@ -52,12 +84,14 @@ export const main = sdk.setupMain(async ({ effects }) => {
       command: ['sh', '/assets/scripts/configure-webui.sh'],
       runAsInit: true,
       // linuxserver images drop privileges to PUID:PGID and set TZ;
-      // QBT_PW_HASH carries the admin password hash (empty until set).
+      // QBT_PW_HASH carries the admin password hash (empty until set);
+      // QBT_SAVE_PATH is the resolved download directory inside the container.
       env: {
         PUID: '1000',
         PGID: '1000',
         TZ: 'Etc/UTC',
         QBT_PW_HASH: passwordHash ?? '',
+        QBT_SAVE_PATH: savePath,
       },
     },
     ready: {

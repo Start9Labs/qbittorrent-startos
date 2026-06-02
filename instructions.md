@@ -11,13 +11,27 @@
    - Access the interface via the StartOS link.
    - Username: `admin`
    - Password: the value shown by the action.
-4. **Rotate your password** anytime by running **"Set Admin Password"** again. The service restarts automatically and the new password takes effect.
+4. **Rotate your password** anytime by running **"Set Admin Password"** again.
 
 ## Configuring Downloads
 
-1. Go to **Tools > Options > Directories** to set your download and incomplete files paths.
-2. The default download directory is `/downloads/` (incomplete files go to `/downloads/incomplete/`). Keep your save paths under `/downloads` so they persist and are included in backups — paths outside `/downloads` and `/config` are not stored and will be lost on restart.
-3. You can add custom download folders and configure automatic file management.
+By default, downloads are saved on qBittorrent's own storage at `/downloads` (incomplete files go to `/downloads/incomplete/`), and are included in backups.
+
+### Saving downloads into File Browser
+
+If you also run **File Browser**, you can have qBittorrent save downloads straight into it, so you can browse, open, and download the finished files from File Browser:
+
+1. Install and start **File Browser** first.
+2. Run the **"Set Download Location"** action on qBittorrent.
+3. Choose **File Browser** and (optionally) change the subfolder name (default `qbittorrent`).
+4. qBittorrent now saves into File Browser. The folder appears in File Browser automatically, and new downloads show up there as they complete.
+
+To go back, run the action again and choose **Local storage**.
+
+Notes:
+- Changing the location affects **new** downloads only — it does not move files you already downloaded.
+- Inside qBittorrent's own **Tools > Options > Directories**, the save path is managed for you; keep downloads under the active location (`/downloads`, or `/mnt/filebrowser` when File Browser is selected). Paths outside the mounted locations are not stored and will be lost on restart.
+- You can still add custom download folders and automatic file management within the active location.
 
 ## Adding Torrents
 
@@ -40,5 +54,5 @@ BitTorrent peers find each other by **IP address and port**, not by hostname —
 - Without inbound reachability qBittorrent still works — it just can't receive unsolicited peer connections, which can reduce speeds and connectivity for some torrents.
 
 ## Important Notes
-- **Downloads location**: Downloaded files are stored under `/downloads` on the `main` volume and are included in backups.
+- **Downloads location**: Downloaded files are stored under `/downloads` on the `main` volume by default (included in backups), or inside **File Browser** if you select it via the "Set Download Location" action.
 - **Credentials**: The admin password is generated via the "Set Admin Password" action. Only qBittorrent's PBKDF2 hash is stored on disk — the plaintext is shown only once, in the action result. If you lose it, just run the action again to set a new one.

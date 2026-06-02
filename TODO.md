@@ -9,8 +9,11 @@
 - [x] Auto-restart on password change (const reactivity)
 - [x] Mount `/downloads` so downloaded content persists
 - [x] Expose BitTorrent peer port (TCP 6881) as a p2p interface
+- [x] "Set Download Location" action: save downloads into File Browser (optional dep)
 - [ ] Add bandwidth limit configuration via actions
 - [ ] Verify install on an actual StartOS instance (login + downloads + restart)
+- [ ] Verify the File Browser download-location flow on a real StartOS box
+      (select File Browser, complete a download, confirm it appears in File Browser)
 - [ ] Verify backup and restore
 - [ ] Publish to registry
 
@@ -23,6 +26,21 @@
   "Invalid Host header, port mismatch".
 - Writing the config while qBittorrent runs is lost to its on-shutdown rewrite;
   writing before start (as main.ts does) takes effect.
+
+## Verified locally for the File Browser download location (docker)
+
+- `filebrowser/filebrowser:v2.63.2` runs as uid 1000 (`user`), matching
+  qBittorrent's PUID=1000 → files qBittorrent writes are readable/browsable in
+  File Browser with no chown step.
+- With `QBT_SAVE_PATH=/mnt/filebrowser/qbittorrent`, the real qBittorrent image
+  reports `save_path=/mnt/filebrowser/qbittorrent`, `temp_path=.../incomplete`,
+  login still 204 through a mismatched Host; a uid-1000 write into the mount
+  lands in File Browser's data dir.
+- `configure-webui.sh upsert` is idempotent across location switches and
+  password rotations (no duplicate keys; both `[BitTorrent]` and
+  `[Preferences]` save-path keys updated).
+- `mountDependency({ readonly: false })` is permitted by the SDK
+  (`DependencyOpts.readonly: boolean`).
 
 ## Resolved
 

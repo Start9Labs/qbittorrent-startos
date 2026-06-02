@@ -9,7 +9,7 @@ export const setAdminPassword = sdk.Action.withoutInput(
   async () => ({
     name: i18n('Set Admin Password'),
     description: i18n(
-      'Generate a new random password for the qBittorrent web UI admin account. The service restarts automatically to apply it.',
+      'Generate a new random password for the qBittorrent web UI admin account.',
     ),
     warning: null,
     allowedStatuses: 'any',
@@ -36,7 +36,7 @@ export const setAdminPassword = sdk.Action.withoutInput(
       version: '1',
       title: i18n('Login Credentials'),
       message: i18n(
-        'Use these credentials to sign in to the qBittorrent web UI. The service is restarting automatically.',
+        'Use these credentials to sign in to the qBittorrent web UI.',
       ),
       result: {
         type: 'group',

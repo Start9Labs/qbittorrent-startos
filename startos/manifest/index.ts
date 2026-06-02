@@ -1,5 +1,5 @@
 import { setupManifest } from '@start9labs/start-sdk'
-import { alertInstall, long, short } from './i18n'
+import { alertInstall, filebrowserDescription, long, short } from './i18n'
 
 export const manifest = setupManifest({
   id: 'qbittorrent',
@@ -28,5 +28,19 @@ export const manifest = setupManifest({
     start: null,
     stop: null,
   },
-  dependencies: {},
+  dependencies: {
+    // Optional. When the user points downloads at File Browser (via the "Set
+    // Download Location" action), qBittorrent mounts File Browser's data volume
+    // read-write and saves there. Declared optional so qBittorrent runs
+    // standalone; the dependency only becomes "required" (in dependencies.ts)
+    // while File Browser is the chosen target.
+    filebrowser: {
+      description: filebrowserDescription,
+      optional: true,
+      metadata: {
+        title: 'File Browser',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/filebrowser-startos/fbf1fefb51cca9731f2a9a9e6f790ca150aa9d04/icon.svg',
+      },
+    },
+  },
 })

@@ -79,7 +79,19 @@ All configuration is managed through the qBittorrent web UI. Key settings includ
 - **DHT/Peering**: enabled by default
 - **UPnP/NAT-PMP**: configurable via the web UI
 
-The web UI admin password is managed via the **"Set Admin Password"** action in StartOS.
+The web UI admin password is managed via the **"Set Admin Password"** action in StartOS. The download location is managed via the **"Set Download Location"** action (see below).
+
+### Download Location (local or File Browser)
+
+By default, qBittorrent saves to its own `main` volume at `/downloads`. The **"Set Download Location"** action lets you instead write completed downloads into **File Browser**, so the files are browsable, downloadable, and manageable from File Browser's UI:
+
+- Pick **File Browser** as the target and choose a subfolder (default `qbittorrent`).
+- qBittorrent mounts File Browser's `data` volume read-write at `/mnt/filebrowser` and points its save path at `/mnt/filebrowser/<subfolder>`.
+- File Browser runs as uid `1000`, the same uid qBittorrent's `PUID` drops to, so files qBittorrent writes are immediately readable in File Browser with no ownership fix-ups.
+- File Browser is an **optional** dependency: qBittorrent runs standalone with local storage, and the dependency only applies while File Browser is the selected target. Install File Browser before selecting it.
+- Switching back to **Local storage** repoints the save path to `/downloads` and unmounts File Browser on the next restart.
+
+> Changing the location does not move existing downloads — only new torrents save to the new path. The save path is written into `qBittorrent.conf` in-container on each start (the same mechanism as the admin password), so it survives qBittorrent's on-shutdown config rewrite.
 
 ---
 
@@ -100,7 +112,8 @@ The Web UI is reachable by the usual StartOS methods (LAN IP, `<hostname>.local`
 
 | Action | Description                                    |
 | ------ | ------------------------------------------------ |
-| Set Admin Password | Generate a new random web UI admin password. The service restarts automatically to apply it |
+| Set Admin Password | Generate a new random web UI admin password |
+| Set Download Location | Choose where completed downloads are saved — local storage or a subfolder inside File Browser |
 
 ---
 
@@ -124,13 +137,15 @@ The Web UI is reachable by the usual StartOS methods (LAN IP, `<hostname>.local`
 
 ## Dependencies
 
-None.
+| Dependency | Optional | Why |
+| ---------- | -------- | --- |
+| File Browser (`>=2.63.2`) | Yes | Only when **"Set Download Location"** targets File Browser. qBittorrent mounts File Browser's `data` volume read-write and saves downloads there. Declared `kind: 'exists'` — File Browser must be installed (so the volume exists) but need not be running for downloads to land. |
 
 ---
 
 ## Limitations and Differences
 
-1. **Download directory** — Downloads persist to `/downloads` on the `main` volume (default save path `/downloads/`). Changing the save path in the Web UI to a location outside `/downloads` or `/config` will not persist across restarts, since only those paths are mounted.
+1. **Download directory** — By default downloads persist to `/downloads` on the `main` volume. The **"Set Download Location"** action can instead route them into File Browser's `data` volume (mounted at `/mnt/filebrowser`). Changing the save path in the Web UI to a location outside the mounted paths (`/downloads`, `/config`, or `/mnt/filebrowser` when File Browser is selected) will not persist across restarts, since only those paths are mounted — use the action to change where downloads go.
 2. **Peer connectivity** — The TCP peer port (6881) is exposed as a `p2p` interface for inbound connections. The address peers see you at is defined by the service's outbound gateway, not by qBittorrent (BitTorrent has no hostname to advertise). qBittorrent also uses UDP 6881 for DHT/µTP; only the TCP port is exposed. Inbound peering requires an inbound-capable gateway (home router with the port forwarded, or StartTunnel); outbound-only VPNs and CGNAT cannot accept inbound peers. UPnP/NAT-PMP is disabled.
 3. **Admin password** — Managed via the **"Set Admin Password"** action. Only qBittorrent's PBKDF2 hash is stored on disk (in `store.json` and `qBittorrent.conf`); the plaintext is shown only in the action result at generation time.
 
@@ -162,7 +177,18 @@ volumes:
 interfaces:
   ui: { port: 8080, protocol: http, type: ui }
   peer: { port: 6881, protocol: tcp, type: p2p }   # inbound BitTorrent peers
-dependencies: none
+dependencies:
+  filebrowser:                    # optional; only while it is the download target
+    versionRange: '>=2.63.2:0'
+    kind: exists                  # must be installed (volume exists); need not be running
+    volume_mounted: data -> /mnt/filebrowser (read-write)
+download_location:                # set via "Set Download Location" action
+  store_fields: { downloadTarget: local|filebrowser, filebrowserSubpath: string }
+  save_path: local -> /downloads ; filebrowser -> /mnt/filebrowser/<subfolder>
+  note: >
+    File Browser runs as uid 1000, same as qBittorrent's PUID, so written files
+    are readable in File Browser with no chown. The save path is written into
+    qBittorrent.conf in-container by configure-webui.sh via QBT_SAVE_PATH.
 startos_managed_env_vars: none
 credential_flow: >
   Username is always "admin". Action generates a random 32-char password,
@@ -182,4 +208,5 @@ webui_conf_flags:                 # set so logins work behind the StartOS proxy
 runAsInit: true  # linuxserver s6-overlay requires PID 1
 actions:
   - setAdminPassword
+  - setDownloadLocation
 ```
