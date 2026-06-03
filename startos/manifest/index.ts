@@ -8,7 +8,7 @@ export const manifest = setupManifest({
   packageRepo: 'https://github.com/Start9Labs/qbittorrent-startos',
   upstreamRepo: 'https://github.com/qbittorrent/qBittorrent',
   marketingUrl: 'https://www.qbittorrent.org/',
-  donationUrl: null,
+  donationUrl: 'https://www.qbittorrent.org/donate',
   docsUrls: ['https://wiki.qbittorrent.org/'],
   description: { short, long },
   volumes: ['main'],

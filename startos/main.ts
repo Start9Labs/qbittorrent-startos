@@ -84,12 +84,14 @@ export const main = sdk.setupMain(async ({ effects }) => {
       command: ['sh', '/assets/scripts/configure-webui.sh'],
       runAsInit: true,
       // linuxserver images drop privileges to PUID:PGID and set TZ;
+      // WEBUI_PORT pins the WebUI port to match the interface + health check;
       // QBT_PW_HASH carries the admin password hash (empty until set);
       // QBT_SAVE_PATH is the resolved download directory inside the container.
       env: {
         PUID: '1000',
         PGID: '1000',
         TZ: 'Etc/UTC',
+        WEBUI_PORT: String(uiPort),
         QBT_PW_HASH: passwordHash ?? '',
         QBT_SAVE_PATH: savePath,
       },

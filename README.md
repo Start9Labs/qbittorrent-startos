@@ -39,7 +39,7 @@ See [instructions.md](instructions.md) for setup instructions.
 | Image         | `linuxserver/qbittorrent:5.2.1`                     |
 | Architectures | x86_64, aarch64                                    |
 | Command       | `configure-webui.sh` (writes `qBittorrent.conf`) then `exec /init` (s6-overlay), PID 1 via `runAsInit` |
-| Env           | `PUID=1000`, `PGID=1000`, `TZ=Etc/UTC`             |
+| Env           | `PUID=1000`, `PGID=1000`, `TZ=Etc/UTC`, `WEBUI_PORT=8080` |
 
 ---
 
@@ -169,7 +169,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development wo
 package_id: qbittorrent
 image: linuxserver/qbittorrent:5.2.1
 architectures: [x86_64, aarch64]
-env: { PUID: 1000, PGID: 1000, TZ: Etc/UTC }
+env: { PUID: 1000, PGID: 1000, TZ: Etc/UTC, WEBUI_PORT: 8080 }
 volumes:
   main:
     /config: main/config        # qBittorrent.conf, categories, RSS, logs
