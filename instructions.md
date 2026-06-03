@@ -1,5 +1,9 @@
 # qBittorrent Instructions
 
+## Documentation
+
+- [qBittorrent Wiki](https://github.com/qbittorrent/qBittorrent/wiki) — official upstream documentation covering the Web UI, configuration options, and features.
+
 ## Getting Started
 
 1. **Install the package** and start the service.
