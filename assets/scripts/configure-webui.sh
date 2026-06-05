@@ -21,6 +21,11 @@
 #   It is upserted on every boot so switching location takes effect, and the
 #   directory is created + chowned to PUID:PGID so qBittorrent can write it and
 #   File Browser (which runs as the same uid 1000) can read it.
+# - It clears qBittorrent's stale single-instance lock (see below) so the Web
+#   UI can never get stuck in an invisible crash loop after an unclean stop.
+# - It forwards qBittorrent's own log file to stdout so the service's runtime
+#   logs are visible in `start-cli package logs` (qbittorrent-nox otherwise
+#   only writes to a file, leaving the StartOS log silent).
 #
 # The peer port (6881) here must match `peerPort` in startos/utils.ts.
 set -e
@@ -90,5 +95,32 @@ upsert Preferences 'Downloads\TempPath' "$SAVE/incomplete/"
 if [ -n "$QBT_PW_HASH" ]; then
   upsert Preferences 'WebUI\Password_PBKDF2' "\"$QBT_PW_HASH\""
 fi
+
+# Clear qBittorrent's stale single-instance guard. qbittorrent-nox writes a Qt
+# QLockFile (/config/qBittorrent/lockfile) plus an ipc-socket to enforce one
+# instance per profile, and removes them on a CLEAN exit. When StartOS stops
+# the service it SIGKILLs the container, so they survive. On the next boot the
+# container's PID namespace resets and qbittorrent-nox reclaims the very same
+# low PID the stale lock recorded, so QLockFile's "is the owner still alive?"
+# check sees a live process and concludes another instance is running — every
+# new instance then quits immediately (exit 0) before binding the Web UI port.
+# The result is a silent crash loop: the health check reports "web interface is
+# not ready" forever while qbittorrent-nox restarts ~once a second.
+#
+# StartOS already guarantees a single instance per subcontainer, and no
+# qBittorrent is running yet at this point in boot, so any lock present here is
+# by definition stale. Drop both artifacts; qBittorrent recreates them.
+rm -f /config/qBittorrent/lockfile /config/qBittorrent/ipc-socket
+
+# Surface qBittorrent's runtime log in `start-cli package logs`. qbittorrent-nox
+# logs only to /config/qBittorrent/logs/qbittorrent.log, never to stdout, so
+# after the image's init banner the container's stdout goes silent and StartOS
+# can't show qBittorrent's own diagnostics. Tail the file to stdout in the
+# background before handing off: -F follows across qBittorrent's log rotation
+# and retries until the file first appears; -n 0 starts at the end so we don't
+# replay the whole history on every restart. The tail is reparented to s6
+# (PID 1) across the exec below and keeps streaming for the life of the boot.
+mkdir -p /config/qBittorrent/logs
+tail -n 0 -F /config/qBittorrent/logs/qbittorrent.log &
 
 exec /init
