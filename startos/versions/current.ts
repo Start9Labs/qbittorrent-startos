@@ -1,18 +1,18 @@
 import { VersionInfo, IMPOSSIBLE } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '5.2.1:1',
+  version: '5.2.2:0',
   releaseNotes: {
     en_US:
-      'Fixed the Web UI failing to load after an unclean shutdown, where a stale single-instance lock could trap qBittorrent in a silent restart loop. qBittorrent’s own logs now appear in the StartOS service logs.',
+      'Updated qBittorrent to 5.2.2. A bugfix release: deletes a stale single-instance lockfile on hostname mismatch, fixes cross-site Web UI login (SameSite=Lax session cookie), repairs several Web UI and RSS issues, and adds a "show file in file manager" option. Full changelog: https://github.com/qbittorrent/qBittorrent/releases/tag/release-5.2.2',
     es_ES:
-      'Se corrigió un fallo por el que la interfaz web no cargaba tras un apagado inesperado, donde un bloqueo de instancia única obsoleto podía atrapar a qBittorrent en un bucle de reinicio silencioso. Los registros de qBittorrent ahora aparecen en los registros del servicio de StartOS.',
+      'Se actualizó qBittorrent a 5.2.2. Versión de corrección de errores: elimina un bloqueo de instancia única obsoleto cuando no coincide el nombre de host, corrige el inicio de sesión entre sitios de la interfaz web (cookie de sesión SameSite=Lax), repara varios problemas de la interfaz web y de RSS, y añade una opción para «mostrar archivo en el gestor de archivos». Registro de cambios completo: https://github.com/qbittorrent/qBittorrent/releases/tag/release-5.2.2',
     de_DE:
-      'Behoben: Die Weboberfläche ließ sich nach einem unsauberen Herunterfahren nicht mehr laden, weil eine veraltete Einzelinstanz-Sperre qBittorrent in einer stillen Neustartschleife festhalten konnte. Die Protokolle von qBittorrent erscheinen jetzt in den StartOS-Dienstprotokollen.',
+      'qBittorrent auf 5.2.2 aktualisiert. Eine Fehlerbehebungs-Version: löscht eine veraltete Einzelinstanz-Sperrdatei bei Hostnamen-Abweichung, behebt die seitenübergreifende Web-UI-Anmeldung (SameSite=Lax-Sitzungscookie), korrigiert mehrere Web-UI- und RSS-Probleme und ergänzt eine Option „Datei im Dateimanager anzeigen“. Vollständiges Änderungsprotokoll: https://github.com/qbittorrent/qBittorrent/releases/tag/release-5.2.2',
     pl_PL:
-      'Naprawiono brak ładowania interfejsu WWW po nieprawidłowym zamknięciu, gdy nieaktualna blokada pojedynczej instancji mogła uwięzić qBittorrent w cichej pętli ponownego uruchamiania. Logi qBittorrent są teraz widoczne w logach usługi StartOS.',
+      'Zaktualizowano qBittorrent do 5.2.2. Wydanie naprawcze: usuwa nieaktualny plik blokady pojedynczej instancji przy niezgodności nazwy hosta, naprawia logowanie do interfejsu WWW między witrynami (ciasteczko sesji SameSite=Lax), poprawia kilka problemów interfejsu WWW i RSS oraz dodaje opcję „pokaż plik w menedżerze plików”. Pełna lista zmian: https://github.com/qbittorrent/qBittorrent/releases/tag/release-5.2.2',
     fr_FR:
-      'Correction de l’interface Web qui ne se chargeait plus après un arrêt impropre, un verrou d’instance unique obsolète pouvant bloquer qBittorrent dans une boucle de redémarrage silencieuse. Les journaux de qBittorrent apparaissent désormais dans les journaux du service StartOS.',
+      'Mise à jour de qBittorrent vers 5.2.2. Une version corrective : supprime un fichier de verrou d’instance unique obsolète en cas de non-correspondance du nom d’hôte, corrige la connexion intersites à l’interface Web (cookie de session SameSite=Lax), répare plusieurs problèmes de l’interface Web et des flux RSS, et ajoute une option « afficher le fichier dans le gestionnaire de fichiers ». Journal des modifications complet : https://github.com/qbittorrent/qBittorrent/releases/tag/release-5.2.2',
   },
   migrations: {
     up: async ({ effects }) => {},
