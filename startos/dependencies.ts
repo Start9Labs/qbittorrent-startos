@@ -14,7 +14,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
   if (target === 'filebrowser') {
     deps['filebrowser'] = {
       kind: 'exists',
-      versionRange: '>=2.63.2:0',
+      versionRange: '>=2.63.17:1',
     }
   }
 

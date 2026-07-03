@@ -31,15 +31,3 @@ export const filebrowserDescription = {
   fr_FR:
     'Optionnel. Permet à qBittorrent d’enregistrer les téléchargements dans File Browser afin que vous puissiez parcourir, télécharger et gérer les fichiers à cet endroit.',
 }
-
-export const alertInstall = {
-  en_US: 'Complete the critical task to set your web UI admin password.',
-  es_ES:
-    'Complete la tarea crítica para establecer su contraseña de administrador de la interfaz web.',
-  de_DE:
-    'Schließen Sie die kritische Aufgabe ab, um Ihr Admin-Passwort für die Web-Oberfläche festzulegen.',
-  pl_PL:
-    'Ukończ krytyczne zadanie, aby ustawić hasło administratora interfejsu internetowego.',
-  fr_FR:
-    "Terminez la tâche critique pour définir votre mot de passe admin de l'interface web.",
-}

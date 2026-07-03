@@ -1,5 +1,5 @@
 import { setupManifest } from '@start9labs/start-sdk'
-import { alertInstall, filebrowserDescription, long, short } from './i18n'
+import { filebrowserDescription, long, short } from './i18n'
 
 export const manifest = setupManifest({
   id: 'qbittorrent',
@@ -19,14 +19,6 @@ export const manifest = setupManifest({
       },
       arch: ['x86_64', 'aarch64'],
     },
-  },
-  alerts: {
-    install: alertInstall,
-    update: null,
-    uninstall: null,
-    restore: null,
-    start: null,
-    stop: null,
   },
   dependencies: {
     // Optional. When the user points downloads at File Browser (via the "Set
