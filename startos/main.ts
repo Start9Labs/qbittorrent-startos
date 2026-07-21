@@ -72,7 +72,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   }
 
   return sdk.Daemons.of(effects).addDaemon('primary', {
-    subcontainer: await sdk.SubContainer.of(
+    subcontainer: sdk.SubContainer.of(
       effects,
       { imageId: 'qbittorrent' },
       mounts,
