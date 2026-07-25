@@ -34,12 +34,12 @@ See [instructions.md](instructions.md) for setup instructions.
 
 ## Image and Container Runtime
 
-| Property      | Value                                              |
-| ------------- | -------------------------------------------------- |
-| Image         | `linuxserver/qbittorrent:5.2.2`                     |
-| Architectures | x86_64, aarch64                                    |
+| Property      | Value                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| Image         | `linuxserver/qbittorrent:5.2.2`                                                                        |
+| Architectures | x86_64, aarch64                                                                                        |
 | Command       | `configure-webui.sh` (writes `qBittorrent.conf`) then `exec /init` (s6-overlay), PID 1 via `runAsInit` |
-| Env           | `PUID=1000`, `PGID=1000`, `TZ=Etc/UTC`, `WEBUI_PORT=8080` |
+| Env           | `PUID=1000`, `PGID=1000`, `TZ=Etc/UTC`, `WEBUI_PORT=8080`                                              |
 
 ---
 
@@ -47,12 +47,13 @@ See [instructions.md](instructions.md) for setup instructions.
 
 A single `main` volume holds both config and downloads, mounted into the container at two paths:
 
-| Mount Point  | Volume subpath      | Purpose                                  |
-| ------------ | ------------------- | ---------------------------------------- |
-| `/config`    | `main/config`       | `qBittorrent.conf`, categories, RSS, logs |
-| `/downloads` | `main/downloads`    | Completed and in-progress downloads       |
+| Mount Point  | Volume subpath   | Purpose                                   |
+| ------------ | ---------------- | ----------------------------------------- |
+| `/config`    | `main/config`    | `qBittorrent.conf`, categories, RSS, logs |
+| `/downloads` | `main/downloads` | Completed and in-progress downloads       |
 
 qBittorrent stores:
+
 - **Configuration**: `/config/qBittorrent/qBittorrent.conf`
 - **Downloads**: `/downloads/` (and `/downloads/incomplete/`), persisted on the `main` volume
 
@@ -97,10 +98,10 @@ By default, qBittorrent saves to its own `main` volume at `/downloads`. The **"S
 
 ## Network Access and Interfaces
 
-| Interface       | Port | Protocol | Type | Purpose                       |
-| --------------- | ---- | -------- | ---- | ----------------------------- |
-| Web UI          | 8080 | HTTP     | `ui`  | Web interface for management   |
-| BitTorrent Peers| 6881 | TCP      | `p2p` | Inbound BitTorrent peer connections |
+| Interface        | Port | Protocol | Type  | Purpose                             |
+| ---------------- | ---- | -------- | ----- | ----------------------------------- |
+| Web UI           | 8080 | HTTP     | `ui`  | Web interface for management        |
+| BitTorrent Peers | 6881 | TCP      | `p2p` | Inbound BitTorrent peer connections |
 
 The Web UI is reachable by the usual StartOS methods (LAN IP, `<hostname>.local`, Tor `.onion`, or a custom domain). The Web UI guards `HostHeaderValidation` and `CSRFProtection` are disabled in `qBittorrent.conf` so logins work through the StartOS reverse proxy; `LocalHostAuth` is disabled so the password is always required.
 
@@ -110,10 +111,10 @@ The Web UI is reachable by the usual StartOS methods (LAN IP, `<hostname>.local`
 
 ## Actions (StartOS UI)
 
-| Action | Description                                    |
-| ------ | ------------------------------------------------ |
-| Set Admin Password | Generate a new random web UI admin password. Renamed to **Reset Admin Password** once a password has been set |
-| Set Download Location | Choose where completed downloads are saved — local storage or a subfolder inside File Browser |
+| Action                | Description                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Set Admin Password    | Generate a new random web UI admin password. Renamed to **Reset Admin Password** once a password has been set |
+| Set Download Location | Choose where completed downloads are saved — local storage or a subfolder inside File Browser                 |
 
 ---
 
@@ -129,17 +130,17 @@ The Web UI is reachable by the usual StartOS methods (LAN IP, `<hostname>.local`
 
 ## Health Checks
 
-| Check         | Method              | Messages                                                           |
-| ------------- | ------------------- | ------------------------------------------------------------------ |
+| Check         | Method                | Messages                                                                        |
+| ------------- | --------------------- | ------------------------------------------------------------------------------- |
 | Web Interface | Port listening (8080) | Success: "The web interface is ready" / Error: "The web interface is not ready" |
 
 ---
 
 ## Dependencies
 
-| Dependency | Optional | Why |
-| ---------- | -------- | --- |
-| File Browser (`>=2.63.2`) | Yes | Only when **"Set Download Location"** targets File Browser. qBittorrent mounts File Browser's `data` volume read-write and saves downloads there. Declared `kind: 'exists'` — File Browser must be installed (so the volume exists) but need not be running for downloads to land. |
+| Dependency                | Optional | Why                                                                                                                                                                                                                                                                                |
+| ------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| File Browser (`>=2.63.2`) | Yes      | Only when **"Set Download Location"** targets File Browser. qBittorrent mounts File Browser's `data` volume read-write and saves downloads there. Declared `kind: 'exists'` — File Browser must be installed (so the volume exists) but need not be running for downloads to land. |
 
 ---
 
@@ -159,7 +160,7 @@ The service is identical to upstream qBittorrent. There are no modifications to 
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development workflow.
+Build and development workflow follow the StartOS packaging guide: <https://docs.start9.com/packaging>. Keep `README.md`, `instructions.md`, and `AGENTS.md` in sync with any change to user-visible behavior or package structure.
 
 ---
 
@@ -172,18 +173,19 @@ architectures: [x86_64, aarch64]
 env: { PUID: 1000, PGID: 1000, TZ: Etc/UTC, WEBUI_PORT: 8080 }
 volumes:
   main:
-    /config: main/config        # qBittorrent.conf, categories, RSS, logs
-    /downloads: main/downloads   # completed + incomplete downloads
+    /config: main/config # qBittorrent.conf, categories, RSS, logs
+    /downloads: main/downloads # completed + incomplete downloads
 interfaces:
   ui: { port: 8080, protocol: http, type: ui }
-  peer: { port: 6881, protocol: tcp, type: p2p }   # inbound BitTorrent peers
+  peer: { port: 6881, protocol: tcp, type: p2p } # inbound BitTorrent peers
 dependencies:
-  filebrowser:                    # optional; only while it is the download target
+  filebrowser: # optional; only while it is the download target
     versionRange: '>=2.63.2:0'
-    kind: exists                  # must be installed (volume exists); need not be running
+    kind: exists # must be installed (volume exists); need not be running
     volume_mounted: data -> /mnt/filebrowser (read-write)
-download_location:                # set via "Set Download Location" action
-  store_fields: { downloadTarget: local|filebrowser, filebrowserSubpath: string }
+download_location: # set via "Set Download Location" action
+  store_fields:
+    { downloadTarget: local|filebrowser, filebrowserSubpath: string }
   save_path: local -> /downloads ; filebrowser -> /mnt/filebrowser/<subfolder>
   note: >
     File Browser runs as uid 1000, same as qBittorrent's PUID, so written files
@@ -201,11 +203,11 @@ credential_flow: >
   PUID-owned /config/qBittorrent dir, and an in-flight write would be lost to
   qBittorrent's on-shutdown rewrite). The store change restarts the service
   automatically via const reactivity.
-webui_conf_flags:                 # set so logins work behind the StartOS proxy
+webui_conf_flags: # set so logins work behind the StartOS proxy
   WebUI\HostHeaderValidation: false
   WebUI\CSRFProtection: false
   WebUI\LocalHostAuth: false
-runAsInit: true  # linuxserver s6-overlay requires PID 1
+runAsInit: true # linuxserver s6-overlay requires PID 1
 actions:
   - setAdminPassword
   - setDownloadLocation
