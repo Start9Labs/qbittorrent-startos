@@ -1,7 +1,7 @@
 import { VersionInfo, IMPOSSIBLE } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '5.2.3:1',
+  version: '5.2.3:2',
   releaseNotes: {
     en_US: `Updated qBittorrent to 5.2.3.
 
