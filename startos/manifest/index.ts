@@ -9,7 +9,6 @@ export const manifest = setupManifest({
   upstreamRepo: 'https://github.com/qbittorrent/qBittorrent',
   marketingUrl: 'https://www.qbittorrent.org/',
   donationUrl: 'https://www.qbittorrent.org/donate',
-  docsUrls: ['https://wiki.qbittorrent.org/'],
   description: { short, long },
   volumes: ['main'],
   images: {
