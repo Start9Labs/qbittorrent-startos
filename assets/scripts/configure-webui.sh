@@ -17,10 +17,10 @@
 #   runs the "Set Admin Password" action.
 # - The save path arrives via QBT_SAVE_PATH (set by main.ts from the "Set
 #   Download Location" action): /downloads for local storage, or
-#   /mnt/filebrowser/<subfolder> when downloads are routed into File Browser.
+#   /mnt/filebrowser/<subfolder> when downloads are routed into FileBrowser Quantum.
 #   It is upserted on every boot so switching location takes effect, and the
 #   directory is created + chowned to PUID:PGID so qBittorrent can write it and
-#   File Browser (which runs as the same uid 1000) can read it.
+#   FileBrowser Quantum (which runs as the same uid 1000) can read it.
 # - It clears qBittorrent's stale single-instance lock (see below) so the Web
 #   UI can never get stuck in an invisible crash loop after an unclean stop.
 # - It forwards qBittorrent's own log file to stdout so the service's runtime

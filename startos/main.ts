@@ -52,10 +52,11 @@ export const main = sdk.setupMain(async ({ effects }) => {
     })
 
   // The save path handed to qBittorrent. Local downloads stay on this
-  // service's own volume; File Browser downloads go into a subfolder of File
-  // Browser's data volume, mounted read-write here. File Browser serves that
-  // volume as uid 1000 — the same uid qBittorrent's PUID drops to — so files
-  // qBittorrent writes are immediately readable and browsable there.
+  // service's own volume; FileBrowser Quantum downloads go into a subfolder of
+  // FileBrowser Quantum's data volume, mounted read-write here. FileBrowser
+  // Quantum serves that volume as uid 1000 — the same uid qBittorrent's PUID
+  // drops to — so files qBittorrent writes are immediately readable and
+  // browsable there.
   let savePath = '/downloads'
   if (downloadTarget === 'filebrowser') {
     const subfolder =

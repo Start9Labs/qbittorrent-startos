@@ -20,16 +20,16 @@ export const manifest = setupManifest({
     },
   },
   dependencies: {
-    // Optional. When the user points downloads at File Browser (via the "Set
-    // Download Location" action), qBittorrent mounts File Browser's data volume
+    // Optional. When the user points downloads at FileBrowser Quantum (via the "Set
+    // Download Location" action), qBittorrent mounts FileBrowser Quantum's data volume
     // read-write and saves there. Declared optional so qBittorrent runs
     // standalone; the dependency only becomes "required" (in dependencies.ts)
-    // while File Browser is the chosen target.
+    // while FileBrowser Quantum is the chosen target.
     filebrowser: {
       description: filebrowserDescription,
       optional: true,
       metadata: {
-        title: 'File Browser',
+        title: 'FileBrowser Quantum',
         icon: 'https://raw.githubusercontent.com/Start9Labs/filebrowser-startos/fbf1fefb51cca9731f2a9a9e6f790ca150aa9d04/icon.svg',
       },
     },
