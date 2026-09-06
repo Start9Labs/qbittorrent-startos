@@ -21,13 +21,13 @@ export const long = {
 
 export const filebrowserDescription = {
   en_US:
-    'Optional. Lets qBittorrent save downloads into File Browser so you can browse, download, and manage the files there.',
+    'Optional. Lets qBittorrent save downloads into FileBrowser Quantum so you can browse, download, and manage the files there.',
   es_ES:
-    'Opcional. Permite que qBittorrent guarde las descargas en File Browser para que pueda explorar, descargar y gestionar los archivos allí.',
+    'Opcional. Permite que qBittorrent guarde las descargas en FileBrowser Quantum para que pueda explorar, descargar y gestionar los archivos allí.',
   de_DE:
-    'Optional. Ermöglicht qBittorrent, Downloads in File Browser zu speichern, sodass Sie die Dateien dort durchsuchen, herunterladen und verwalten können.',
+    'Optional. Ermöglicht qBittorrent, Downloads in FileBrowser Quantum zu speichern, sodass Sie die Dateien dort durchsuchen, herunterladen und verwalten können.',
   pl_PL:
-    'Opcjonalne. Pozwala qBittorrent zapisywać pobrane pliki w File Browser, dzięki czemu możesz je tam przeglądać, pobierać i zarządzać nimi.',
+    'Opcjonalne. Pozwala qBittorrent zapisywać pobrane pliki w FileBrowser Quantum, dzięki czemu możesz je tam przeglądać, pobierać i zarządzać nimi.',
   fr_FR:
-    'Optionnel. Permet à qBittorrent d’enregistrer les téléchargements dans File Browser afin que vous puissiez parcourir, télécharger et gérer les fichiers à cet endroit.',
+    'Optionnel. Permet à qBittorrent d’enregistrer les téléchargements dans FileBrowser Quantum afin que vous puissiez parcourir, télécharger et gérer les fichiers à cet endroit.',
 }

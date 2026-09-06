@@ -7,13 +7,13 @@ import { sdk } from '../sdk'
 const shape = z.object({
   adminPasswordHash: z.string().optional().catch(undefined),
   // Where completed downloads are saved. 'local' keeps them on this service's
-  // own `main` volume (/downloads); 'filebrowser' writes them into File
-  // Browser's data volume so the files are browsable there. Set via the "Set
+  // own `main` volume (/downloads); 'filebrowser' writes them into FileBrowser
+  // Quantum's data volume so the files are browsable there. Set via the "Set
   // Download Location" action; read reactively in main.ts + dependencies.ts so
-  // changing it restarts the service and re-mounts. File Browser runs as
+  // changing it restarts the service and re-mounts. FileBrowser Quantum runs as
   // uid 1000, same as qBittorrent's PUID, so the files are readable as-is.
   downloadTarget: z.enum(['local', 'filebrowser']).catch('local'),
-  // Subfolder inside File Browser's volume to save into (ignored when local).
+  // Subfolder inside FileBrowser Quantum's volume to save into (ignored when local).
   filebrowserSubpath: z.string().catch('qbittorrent'),
 })
 

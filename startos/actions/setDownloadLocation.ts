@@ -5,12 +5,12 @@ import { storeJson } from '../fileModels/store.json'
 const { InputSpec, Value, Variants } = sdk
 
 export const inputSpec = InputSpec.of({
-  // A union so the File Browser subfolder field only appears when File Browser
+  // A union so the FileBrowser Quantum subfolder field only appears when FileBrowser Quantum
   // is the selected target — nothing extra to fill in for local storage.
   location: Value.union({
     name: i18n('Download Location'),
     description: i18n(
-      'Where qBittorrent saves completed downloads. "Local storage" keeps them on this service. "File Browser" writes them into File Browser so you can browse, download, and manage the files there.',
+      'Where qBittorrent saves completed downloads. "Local storage" keeps them on this service. "FileBrowser Quantum" writes them into FileBrowser Quantum so you can browse, download, and manage the files there.',
     ),
     default: 'local',
     variants: Variants.of({
@@ -19,12 +19,12 @@ export const inputSpec = InputSpec.of({
         spec: InputSpec.of({}),
       },
       filebrowser: {
-        name: i18n('File Browser'),
+        name: i18n('FileBrowser Quantum'),
         spec: InputSpec.of({
           subfolder: Value.text({
-            name: i18n('File Browser Subfolder'),
+            name: i18n('FileBrowser Quantum Subfolder'),
             description: i18n(
-              'Folder inside File Browser where downloads are saved. Created automatically; File Browser must be installed.',
+              'Folder inside FileBrowser Quantum where downloads are saved. Created automatically; FileBrowser Quantum must be installed.',
             ),
             default: 'qbittorrent',
             required: true,
@@ -44,7 +44,7 @@ export const setDownloadLocation = sdk.Action.withInput(
   async () => ({
     name: i18n('Set Download Location'),
     description: i18n(
-      'Choose where qBittorrent saves completed downloads — locally, or into File Browser.',
+      'Choose where qBittorrent saves completed downloads — locally, or into FileBrowser Quantum.',
     ),
     warning: null,
     allowedStatuses: 'any',
@@ -56,7 +56,7 @@ export const setDownloadLocation = sdk.Action.withInput(
   inputSpec,
 
   // pre-fill the form with the current values. `other` keeps the last subfolder
-  // around so it reappears if the user switches back to File Browser.
+  // around so it reappears if the user switches back to FileBrowser Quantum.
   async ({ effects }) => {
     const target =
       (await storeJson.read((s) => s.downloadTarget).const(effects)) ?? 'local'
@@ -76,7 +76,7 @@ export const setDownloadLocation = sdk.Action.withInput(
   },
 
   // execution: persist the choice. main.ts + dependencies.ts read these
-  // reactively, so saving re-mounts (or unmounts) File Browser, repoints the
+  // reactively, so saving re-mounts (or unmounts) FileBrowser Quantum, repoints the
   // save path, and restarts the service. Local leaves the stored subfolder
   // untouched so it survives a round-trip.
   async ({ effects, input }) => {
