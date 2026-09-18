@@ -12,7 +12,11 @@ const shape = z.object({
   // Download Location" action; read reactively in main.ts + dependencies.ts so
   // changing it restarts the service and re-mounts. FileBrowser Quantum runs as
   // uid 1000, same as qBittorrent's PUID, so the files are readable as-is.
-  downloadTarget: z.enum(['local', 'filebrowser']).catch('local'),
+  downloadTarget: z
+    .enum(['local', 'nextexplorer', 'filebrowser'])
+    .catch('local'),
+  // Subfolder inside NextExplorer's volume, starting with the drive name.
+  nextexplorerSubpath: z.string().catch('Files/qbittorrent'),
   // Subfolder inside FileBrowser Quantum's volume to save into (ignored when local).
   filebrowserSubpath: z.string().catch('qbittorrent'),
 })

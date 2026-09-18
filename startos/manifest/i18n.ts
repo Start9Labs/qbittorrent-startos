@@ -19,6 +19,19 @@ export const long = {
     'qBittorrent est un client BitTorrent gratuit et open source. Le package StartOS fournit une interface web pour gérer les torrents, configurer les paramètres et accéder aux fichiers téléchargés.',
 }
 
+export const nextexplorerDescription = {
+  en_US:
+    'Optional. Lets qBittorrent save downloads into NextExplorer so you can browse, download, and manage the files there.',
+  es_ES:
+    'Opcional. Permite que qBittorrent guarde las descargas en NextExplorer para que pueda explorar, descargar y gestionar los archivos allí.',
+  de_DE:
+    'Optional. Ermöglicht qBittorrent, Downloads in NextExplorer zu speichern, sodass Sie die Dateien dort durchsuchen, herunterladen und verwalten können.',
+  pl_PL:
+    'Opcjonalne. Pozwala qBittorrent zapisywać pobrania w NextExplorer, aby można było tam przeglądać, pobierać i zarządzać plikami.',
+  fr_FR:
+    'Facultatif. Permet à qBittorrent d’enregistrer les téléchargements dans NextExplorer afin de parcourir, télécharger et gérer les fichiers à cet endroit.',
+}
+
 export const filebrowserDescription = {
   en_US:
     'Optional. Lets qBittorrent save downloads into FileBrowser Quantum so you can browse, download, and manage the files there.',

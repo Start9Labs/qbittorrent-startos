@@ -7,6 +7,7 @@ export const peerPort = 6881
 
 // Where FileBrowser Quantum's data volume is mounted inside the qBittorrent container
 // when the user routes downloads there (see main.ts + setDownloadLocation).
+export const nextexplorerMountpoint = '/mnt/nextexplorer'
 export const filebrowserMountpoint = '/mnt/filebrowser'
 
 /**
