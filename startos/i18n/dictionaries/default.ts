@@ -27,13 +27,16 @@ const dict = {
 
   // actions/setDownloadLocation.ts
   'Set Download Location': 15,
-  'Choose where qBittorrent saves completed downloads — locally, or into FileBrowser Quantum.': 16,
+  'Choose where qBittorrent saves completed downloads — locally, or into NextExplorer or FileBrowser Quantum.': 16,
   'Download Location': 17,
-  'Where qBittorrent saves completed downloads. "Local storage" keeps them on this service. "FileBrowser Quantum" writes them into FileBrowser Quantum so you can browse, download, and manage the files there.': 18,
+  'Where qBittorrent saves completed downloads. "Local storage" keeps them on this service. "NextExplorer" or "FileBrowser Quantum" writes them into that service so you can browse, download, and manage the files there.': 18,
   'Local storage': 19,
   'FileBrowser Quantum': 20,
   'FileBrowser Quantum Subfolder': 21,
   'Folder inside FileBrowser Quantum where downloads are saved. Created automatically; FileBrowser Quantum must be installed.': 22,
+  NextExplorer: 24,
+  'NextExplorer Subfolder': 25,
+  'Folder inside NextExplorer where downloads are saved, starting with the drive name. Created automatically; NextExplorer must be installed.': 26,
 } as const
 
 /**

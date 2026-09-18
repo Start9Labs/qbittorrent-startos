@@ -70,7 +70,7 @@ One volume, mounted twice at different subpaths.
 
 The downloads mount matters more than it looks: the image's default save path is `/downloads`, and without a volume there the content would land on the container's ephemeral filesystem and vanish on every restart.
 
-When downloads are routed to FileBrowser Quantum, its data volume is additionally mounted **read-write** at `/mnt/filebrowser`, and the local `downloads/` subpath sits unused.
+When downloads are routed to NextExplorer or FileBrowser Quantum, that service's data volume is additionally mounted **read-write** at `/mnt/nextexplorer` or `/mnt/filebrowser`, and the local `downloads/` subpath sits unused. NextExplorer's volume root holds one directory per drive, so its subfolder starts with the drive name — `Files/qbittorrent` by default.
 
 ## File Models
 
@@ -80,13 +80,14 @@ One model, and it is not qBittorrent's config — that file is written by the wr
 | ------------ | ------ | ----------------------- | --------------- |
 | `store.json` | JSON   | Yes — `FileHelper.json` | The two actions |
 
-| Key                  | Set by                | Notes                                                     |
-| -------------------- | --------------------- | --------------------------------------------------------- |
-| `adminPasswordHash`  | Set Admin Password    | The PBKDF2 value only — **the plaintext is never stored** |
-| `downloadTarget`     | Set Download Location | `local` or `filebrowser`                                  |
-| `filebrowserSubpath` | Set Download Location | Kept across a switch back to local, so it reappears       |
+| Key                   | Set by                | Notes                                                     |
+| --------------------- | --------------------- | --------------------------------------------------------- |
+| `adminPasswordHash`   | Set Admin Password    | The PBKDF2 value only — **the plaintext is never stored** |
+| `downloadTarget`      | Set Download Location | `local`, `nextexplorer` or `filebrowser`                  |
+| `nextexplorerSubpath` | Set Download Location | Kept across a switch away, so it reappears                |
+| `filebrowserSubpath`  | Set Download Location | Kept across a switch back to local, so it reappears       |
 
-All three are read reactively, so writing any of them restarts the service — which is exactly what applies the change, since the wrapper script only runs at boot.
+All four are read reactively, so writing any of them restarts the service — which is exactly what applies the change, since the wrapper script only runs at boot.
 
 **The password is stored the way qBittorrent stores it, not as a hash of convenience.** qBittorrent 4.2+ expects PBKDF2-HMAC-SHA512 with a random salt, 100,000 iterations, and a 64-byte key, framed as `@ByteArray(<salt>:<key>)`. A plain hash written to the older key is silently ignored — the login just fails with no error.
 
@@ -94,15 +95,16 @@ All three are read reactively, so writing any of them restarts the service — w
 
 ## Dependencies
 
-One, optional, and only while it is the chosen download target.
+Two, both optional, and each only while it is the chosen download target.
 
-| Dependency    | Kind     | Required                              |
-| ------------- | -------- | ------------------------------------- |
-| `filebrowser` | `exists` | Only while downloads are routed there |
+| Dependency     | Kind     | Required                              |
+| -------------- | -------- | ------------------------------------- |
+| `nextexplorer` | `exists` | Only while downloads are routed there |
+| `filebrowser`  | `exists` | Only while downloads are routed there |
 
-qBittorrent writes into FileBrowser Quantum's volume whether or not FileBrowser Quantum is running, so it only needs to be installed for the volume to exist. Declaring it this way drives the "FileBrowser Quantum isn't installed" warning without ever blocking qBittorrent's own startup.
+qBittorrent writes into the target's volume whether or not that service is running, so it only needs to be installed for the volume to exist. Declaring it this way drives the "isn't installed" warning without ever blocking qBittorrent's own startup.
 
-**The two services agree on a uid.** FileBrowser Quantum serves its volume as uid 1000, which is the same uid qBittorrent's `PUID` drops to, so files qBittorrent writes there are immediately readable and manageable in FileBrowser Quantum with no permission work.
+**The services agree on a uid.** NextExplorer and FileBrowser Quantum both serve their volume as uid 1000, which is the same uid qBittorrent's `PUID` drops to, so files qBittorrent writes there are immediately readable and manageable in that service with no permission work.
 
 ## Network Access and Interfaces
 
@@ -123,7 +125,7 @@ Install starts the service and raises a `critical` task: set the admin password.
 
 Running that action generates a 32-character password, shows it once, and restarts the service so the wrapper script writes it into the config. The username is always `admin`.
 
-Downloads go to this service's own volume unless you say otherwise. If you would rather browse and manage them elsewhere, install FileBrowser Quantum and run Set Download Location.
+Downloads go to this service's own volume unless you say otherwise. If you would rather browse and manage them elsewhere, install NextExplorer (or FileBrowser Quantum) and run Set Download Location.
 
 ## Actions
 
@@ -140,9 +142,9 @@ One action whose name flips once a password exists.
 
 ### Set Download Location
 
-Local storage, or a subfolder inside FileBrowser Quantum.
+Local storage, or a subfolder inside NextExplorer or FileBrowser Quantum.
 
-- **What it changes:** `downloadTarget` and `filebrowserSubpath` in `store.json`; through them the container's mounts, the save path, and the package's dependency.
+- **What it changes:** `downloadTarget` and the matching subpath in `store.json`; through them the container's mounts, the save path, and the package's dependency.
 - **Cost:** seconds, then a restart.
 - **Repeat safety:** idempotent. Switching back to local leaves the stored subfolder alone, so it reappears if you switch back again.
 - **Existing downloads do not move.** The new path applies to what qBittorrent saves from then on; files already on the old path stay there, and torrents still seeding from it keep pointing at it.
@@ -179,7 +181,7 @@ Because the script also tails qBittorrent's own log to stdout, the service log c
 The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No dump step and nothing excluded.
 
 - **Included:** `qBittorrent.conf` with the password hash and every Web UI setting, the torrent state, categories, RSS feeds, logs, `store.json`, **and every locally-saved download**.
-- **Size:** with local downloads, this backup is as large as your download directory. Routing downloads to FileBrowser Quantum moves that bulk into FileBrowser Quantum's backup instead — those files are outside this volume and are never captured here.
+- **Size:** with local downloads, this backup is as large as your download directory. Routing downloads to NextExplorer or FileBrowser Quantum moves that bulk into that service's backup instead — those files are outside this volume and are never captured here.
 - **Restore:** complete, and no task is raised — the password comes back with the store. Torrents resume against whatever save path is configured.
 
 ## Limitations and Differences
@@ -188,7 +190,7 @@ The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No du
 2. **Host-header validation and CSRF protection are disabled**, because StartOS's reverse proxy rewrites what they check. Localhost auth is disabled too, so a password is always required.
 3. **qBittorrent's config is written from inside the container at boot.** A change made in the Web UI to one of the package-owned keys is overwritten on the next restart.
 4. **Changing the download location does not move existing files.**
-5. **Downloads routed to FileBrowser Quantum are not in this service's backup.**
+5. **Downloads routed to NextExplorer or FileBrowser Quantum are not in this service's backup.**
 6. **The peer port is masked** and is not meant to be opened in a browser.
 7. **No riscv64 build.** x86_64 and aarch64 only.
 
@@ -216,6 +218,7 @@ startos_managed_env_vars:
   - QBT_PW_HASH # the PBKDF2 value; empty until the password action runs
   - QBT_SAVE_PATH # resolved from the download-location action
 dependencies:
+  - nextexplorer # optional, exists; only while it is the download target
   - filebrowser # optional, exists; only while it is the download target
 interfaces:
   ui: { type: ui, port: 8080 }

@@ -1,8 +1,9 @@
 import { manifest as filebrowserManifest } from 'filebrowser-startos/startos/manifest'
+import { manifest as nextexplorerManifest } from 'nextexplorer-startos/startos/manifest'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import { storeJson } from './fileModels/store.json'
-import { filebrowserMountpoint, uiPort } from './utils'
+import { filebrowserMountpoint, nextexplorerMountpoint, uiPort } from './utils'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   console.info(i18n('Starting qBittorrent!'))
@@ -25,6 +26,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
     .const(effects)
   const filebrowserSubpath = await storeJson
     .read((s) => s.filebrowserSubpath)
+    .const(effects)
+  const nextexplorerSubpath = await storeJson
+    .read((s) => s.nextexplorerSubpath)
     .const(effects)
 
   let mounts = sdk.Mounts.of()
@@ -58,6 +62,19 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // drops to — so files qBittorrent writes are immediately readable and
   // browsable there.
   let savePath = '/downloads'
+  if (downloadTarget === 'nextexplorer') {
+    const subfolder =
+      (nextexplorerSubpath ?? 'Files/qbittorrent').replace(/^\/+|\/+$/g, '') ||
+      'Files/qbittorrent'
+    savePath = `${nextexplorerMountpoint}/${subfolder}`
+    mounts = mounts.mountDependency<typeof nextexplorerManifest>({
+      dependencyId: 'nextexplorer',
+      volumeId: 'data',
+      subpath: null,
+      mountpoint: nextexplorerMountpoint,
+      readonly: false,
+    })
+  }
   if (downloadTarget === 'filebrowser') {
     const subfolder =
       (filebrowserSubpath ?? 'qbittorrent').replace(/^\/+|\/+$/g, '') ||

@@ -10,13 +10,27 @@ export const inputSpec = InputSpec.of({
   location: Value.union({
     name: i18n('Download Location'),
     description: i18n(
-      'Where qBittorrent saves completed downloads. "Local storage" keeps them on this service. "FileBrowser Quantum" writes them into FileBrowser Quantum so you can browse, download, and manage the files there.',
+      'Where qBittorrent saves completed downloads. "Local storage" keeps them on this service. "NextExplorer" or "FileBrowser Quantum" writes them into that service so you can browse, download, and manage the files there.',
     ),
     default: 'local',
     variants: Variants.of({
       local: {
         name: i18n('Local storage'),
         spec: InputSpec.of({}),
+      },
+      nextexplorer: {
+        name: i18n('NextExplorer'),
+        spec: InputSpec.of({
+          subfolder: Value.text({
+            name: i18n('NextExplorer Subfolder'),
+            description: i18n(
+              'Folder inside NextExplorer where downloads are saved, starting with the drive name. Created automatically; NextExplorer must be installed.',
+            ),
+            default: 'Files/qbittorrent',
+            required: true,
+            placeholder: 'Files/qbittorrent',
+          }),
+        }),
       },
       filebrowser: {
         name: i18n('FileBrowser Quantum'),
@@ -44,7 +58,7 @@ export const setDownloadLocation = sdk.Action.withInput(
   async () => ({
     name: i18n('Set Download Location'),
     description: i18n(
-      'Choose where qBittorrent saves completed downloads — locally, or into FileBrowser Quantum.',
+      'Choose where qBittorrent saves completed downloads — locally, or into NextExplorer or FileBrowser Quantum.',
     ),
     warning: null,
     allowedStatuses: 'any',
@@ -63,15 +77,31 @@ export const setDownloadLocation = sdk.Action.withInput(
     const subfolder =
       (await storeJson.read((s) => s.filebrowserSubpath).const(effects)) ??
       'qbittorrent'
+    const nextexplorerSubfolder =
+      (await storeJson.read((s) => s.nextexplorerSubpath).const(effects)) ??
+      'Files/qbittorrent'
     return {
       location:
-        target === 'filebrowser'
-          ? { selection: 'filebrowser' as const, value: { subfolder } }
-          : {
-              selection: 'local' as const,
-              value: {},
+        target === 'nextexplorer'
+          ? {
+              selection: 'nextexplorer' as const,
+              value: { subfolder: nextexplorerSubfolder },
               other: { filebrowser: { subfolder } },
-            },
+            }
+          : target === 'filebrowser'
+            ? {
+                selection: 'filebrowser' as const,
+                value: { subfolder },
+                other: { nextexplorer: { subfolder: nextexplorerSubfolder } },
+              }
+            : {
+                selection: 'local' as const,
+                value: {},
+                other: {
+                  nextexplorer: { subfolder: nextexplorerSubfolder },
+                  filebrowser: { subfolder },
+                },
+              },
     }
   },
 
@@ -81,6 +111,12 @@ export const setDownloadLocation = sdk.Action.withInput(
   // untouched so it survives a round-trip.
   async ({ effects, input }) => {
     const loc = input.location
+    if (loc.selection === 'nextexplorer') {
+      return storeJson.merge(effects, {
+        downloadTarget: 'nextexplorer',
+        nextexplorerSubpath: loc.value.subfolder,
+      })
+    }
     if (loc.selection === 'filebrowser') {
       return storeJson.merge(effects, {
         downloadTarget: 'filebrowser',

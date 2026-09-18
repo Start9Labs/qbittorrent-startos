@@ -11,6 +11,12 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
   // qBittorrent writes into FileBrowser Quantum's volume whether or not FileBrowser Quantum
   // is running — it just needs to be installed so the volume exists.
   const target = await storeJson.read((s) => s.downloadTarget).const(effects)
+  if (target === 'nextexplorer') {
+    deps['nextexplorer'] = {
+      kind: 'exists',
+      versionRange: '>=2.2.7:0',
+    }
+  }
   if (target === 'filebrowser') {
     deps['filebrowser'] = {
       kind: 'exists',
