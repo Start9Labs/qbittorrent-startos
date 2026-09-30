@@ -19,7 +19,7 @@ export const manifest = setupManifest({
   images: {
     qbittorrent: {
       source: {
-        dockerTag: 'linuxserver/qbittorrent:5.2.3',
+        dockerTag: 'linuxserver/qbittorrent:5.2.4',
       },
       arch: ['x86_64', 'aarch64'],
     },
