@@ -70,7 +70,7 @@ One volume, mounted twice at different subpaths.
 
 The downloads mount matters more than it looks: the image's default save path is `/downloads`, and without a volume there the content would land on the container's ephemeral filesystem and vanish on every restart.
 
-When downloads are routed to NextExplorer or FileBrowser Quantum, that service's data volume is additionally mounted **read-write** at `/mnt/nextexplorer` or `/mnt/filebrowser`, and the local `downloads/` subpath sits unused. NextExplorer's volume root holds one directory per drive, so its subfolder starts with the drive name — `Files/qbittorrent` by default.
+When downloads are routed to NextExplorer or FileBrowser Quantum, that service's data volume is additionally mounted **read-write** at `/mnt/nextexplorer` or `/mnt/filebrowser`, and the local `downloads/` subpath sits unused. NextExplorer's volume root holds one directory per location (each is listed under Locations in NextExplorer), so its subfolder starts with a location name — `Files/qbittorrent` by default.
 
 ## File Models
 
@@ -97,12 +97,12 @@ All four are read reactively, so writing any of them restarts the service — wh
 
 Two, both optional, and each only while it is the chosen download target.
 
-| Dependency     | Kind     | Required                              |
-| -------------- | -------- | ------------------------------------- |
-| `nextexplorer` | `exists` | Only while downloads are routed there |
-| `filebrowser`  | `exists` | Only while downloads are routed there |
+| Dependency     | Kind     | Version range                         | Required                              |
+| -------------- | -------- | ------------------------------------- | ------------------------------------- |
+| `nextexplorer` | `exists` | `>=2.2.7:0`                           | Only while downloads are routed there |
+| `filebrowser`  | `exists` | `>=2.63.18:3 \|\| >=#quantum:1.5.2:0` | Only while downloads are routed there |
 
-qBittorrent writes into the target's volume whether or not that service is running, so it only needs to be installed for the volume to exist. Declaring it this way drives the "isn't installed" warning without ever blocking qBittorrent's own startup.
+qBittorrent writes into the target's volume whether or not that service is running, so it only needs to be installed for the volume to exist. Declaring it this way drives the "isn't installed" warning without ever blocking qBittorrent's own startup. The `filebrowser` range admits both the File Browser package and its FileBrowser Quantum flavor (`#quantum`); both keep their files in a `data` volume.
 
 **The services agree on a uid.** NextExplorer and FileBrowser Quantum both serve their volume as uid 1000, which is the same uid qBittorrent's `PUID` drops to, so files qBittorrent writes there are immediately readable and manageable in that service with no permission work.
 
@@ -137,7 +137,7 @@ One action whose name flips once a password exists.
 
 - **What it changes:** `adminPasswordHash` in `store.json`; the wrapper script writes it into `qBittorrent.conf` on the next boot.
 - **Cost:** seconds, then a restart.
-- **Repeat safety:** safe to re-run; each run generates a fresh password and invalidates the previous one.
+- **Repeat safety:** safe to re-run; each run generates a fresh password and invalidates the previous one. Once a password exists, StartOS asks for confirmation before running it.
 - **Outputs:** the username and password, masked and copyable. **The plaintext is shown once and stored nowhere** — running the action again is the only recovery.
 
 ### Set Download Location
@@ -149,6 +149,7 @@ Local storage, or a subfolder inside NextExplorer or FileBrowser Quantum.
 - **Repeat safety:** idempotent. Switching back to local leaves the stored subfolder alone, so it reappears if you switch back again.
 - **Existing downloads do not move.** The new path applies to what qBittorrent saves from then on; files already on the old path stay there, and torrents still seeding from it keep pointing at it.
 - **The subfolder is created automatically**, and chowned so both services can use it.
+- **Input rules:** neither subfolder may start with `/` or contain a `..` folder. A value stored before this rule still works, since `main` trims leading and trailing slashes; the rule applies the next time the action is run.
 
 ## Tasks
 
@@ -218,8 +219,8 @@ startos_managed_env_vars:
   - QBT_PW_HASH # the PBKDF2 value; empty until the password action runs
   - QBT_SAVE_PATH # resolved from the download-location action
 dependencies:
-  - nextexplorer # optional, exists; only while it is the download target
-  - filebrowser # optional, exists; only while it is the download target
+  - nextexplorer # optional, exists, >=2.2.7:0; only while it is the download target
+  - filebrowser # optional, exists, >=2.63.18:3 || >=#quantum:1.5.2:0; only while it is the download target
 interfaces:
   ui: { type: ui, port: 8080 }
   peer: { type: p2p, port: 6881 } # masked; raw TCP

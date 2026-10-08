@@ -1,10 +1,5 @@
 import { setupManifest } from '@start9labs/start-sdk'
-import {
-  filebrowserDescription,
-  long,
-  nextexplorerDescription,
-  short,
-} from './i18n'
+import { long, short } from './i18n'
 
 export const manifest = setupManifest({
   id: 'qbittorrent',
@@ -22,29 +17,6 @@ export const manifest = setupManifest({
         dockerTag: 'linuxserver/qbittorrent:5.2.4',
       },
       arch: ['x86_64', 'aarch64'],
-    },
-  },
-  dependencies: {
-    nextexplorer: {
-      description: nextexplorerDescription,
-      optional: true,
-      metadata: {
-        title: 'NextExplorer',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/nextexplorer-startos/04f7ecbfc31ad2205e0222dd7568fb881aa06c79/icon.svg',
-      },
-    },
-    // Optional. When the user points downloads at FileBrowser Quantum (via the "Set
-    // Download Location" action), qBittorrent mounts FileBrowser Quantum's data volume
-    // read-write and saves there. Declared optional so qBittorrent runs
-    // standalone; the dependency only becomes "required" (in dependencies.ts)
-    // while FileBrowser Quantum is the chosen target.
-    filebrowser: {
-      description: filebrowserDescription,
-      optional: true,
-      metadata: {
-        title: 'FileBrowser Quantum',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/filebrowser-quantum-startos/e936a6c85a97b930b43cad5e9c0dd4898a2df567/icon.svg',
-      },
     },
   },
 })
