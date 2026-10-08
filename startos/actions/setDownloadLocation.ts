@@ -1,6 +1,7 @@
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
 import { storeJson } from '../fileModels/store.json'
+import { subfolderPattern } from '../utils'
 
 const { InputSpec, Value, Variants } = sdk
 
@@ -10,7 +11,7 @@ export const inputSpec = InputSpec.of({
   location: Value.union({
     name: i18n('Download Location'),
     description: i18n(
-      'Where qBittorrent saves completed downloads. "Local storage" keeps them on this service. "NextExplorer" or "FileBrowser Quantum" writes them into that service so you can browse, download, and manage the files there.',
+      "Where qBittorrent saves downloads.\n- Local storage: in qBittorrent's own storage, included in its backups.\n- NextExplorer: in a folder in NextExplorer, where you can browse, download and manage the files.\n- FileBrowser Quantum: in a folder in FileBrowser Quantum, where you can browse, download and manage the files.",
     ),
     default: 'local',
     variants: Variants.of({
@@ -24,11 +25,12 @@ export const inputSpec = InputSpec.of({
           subfolder: Value.text({
             name: i18n('NextExplorer Subfolder'),
             description: i18n(
-              'Folder inside NextExplorer where downloads are saved, starting with the drive name. Created automatically; NextExplorer must be installed.',
+              'Folder inside NextExplorer where downloads are saved, starting with one of its locations, such as Files. Created automatically; NextExplorer must be installed.',
             ),
             default: 'Files/qbittorrent',
             required: true,
             placeholder: 'Files/qbittorrent',
+            patterns: [subfolderPattern],
           }),
         }),
       },
@@ -43,6 +45,7 @@ export const inputSpec = InputSpec.of({
             default: 'qbittorrent',
             required: true,
             placeholder: 'qbittorrent',
+            patterns: [subfolderPattern],
           }),
         }),
       },
@@ -58,7 +61,7 @@ export const setDownloadLocation = sdk.Action.withInput(
   async () => ({
     name: i18n('Set Download Location'),
     description: i18n(
-      'Choose where qBittorrent saves completed downloads — locally, or into NextExplorer or FileBrowser Quantum.',
+      'Choose where qBittorrent saves downloads — locally, or into NextExplorer or FileBrowser Quantum.',
     ),
     warning: null,
     allowedStatuses: 'any',

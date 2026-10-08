@@ -15,7 +15,7 @@
    - Access the interface via the StartOS link.
    - Username: `admin`
    - Password: the value shown by the action.
-4. **Rotate your password** anytime by running **"Reset Admin Password"** (the action is renamed from "Set Admin Password" once a password has been set).
+4. **Rotate your password** anytime by running **"Reset Admin Password"** (the action is renamed from "Set Admin Password" once a password has been set). StartOS asks you to confirm first, since the old password stops working.
 
 ## Configuring Downloads
 
@@ -27,7 +27,7 @@ If you also run **NextExplorer** (recommended) or **FileBrowser Quantum**, you c
 
 1. Install and start **NextExplorer** or **FileBrowser Quantum** first.
 2. Run the **"Set Download Location"** action on qBittorrent.
-3. Choose the service and (optionally) change the subfolder. For NextExplorer the subfolder starts with the drive name (default `Files/qbittorrent`); for FileBrowser Quantum it is relative to the storage root (default `qbittorrent`).
+3. Choose the service and (optionally) change the subfolder. For NextExplorer the subfolder starts with one of its locations (default `Files/qbittorrent`); for FileBrowser Quantum it is relative to the storage root (default `qbittorrent`). A subfolder can't start with `/` or contain a `..` folder.
 4. qBittorrent now saves there. The folder appears in that service automatically, and new downloads show up as they complete.
 
 To go back, run the action again and choose **Local storage**.

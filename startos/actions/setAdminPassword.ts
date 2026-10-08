@@ -19,7 +19,11 @@ export const setAdminPassword = sdk.Action.withoutInput(
       description: i18n(
         'Generate a new random password for the qBittorrent web UI admin account.',
       ),
-      warning: null,
+      warning: alreadySet
+        ? i18n(
+            'This replaces the current admin password. The old password stops working, and qBittorrent restarts.',
+          )
+        : null,
       allowedStatuses: 'any',
       group: null,
       visibility: 'enabled',

@@ -4,7 +4,7 @@ import { sdk } from '../sdk'
 // Store only the PBKDF2 hash — never plaintext.
 // The hash is used reactively so the service restarts when it changes
 // (i.e. when the user runs "Set Admin Password").
-const shape = z.object({
+const shape = z.looseObject({
   adminPasswordHash: z.string().optional().catch(undefined),
   // Where completed downloads are saved. 'local' keeps them on this service's
   // own `main` volume (/downloads); 'filebrowser' writes them into FileBrowser

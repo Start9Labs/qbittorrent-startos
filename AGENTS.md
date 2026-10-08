@@ -18,17 +18,23 @@ Freshly scaffolded? Work the
 guide page, not a file in this repo — read it, don't copy it in.
 
 Keep `README.md` (technical reference for an AI support or administering agent) and
-`instructions.md` (end-user docs) in sync with your changes.
+`instructions.md` (end-user docs) in sync with your changes. This file restates neither:
+whoever changes the package has both, so it carries only what they don't — repo mechanics,
+a change that looks right and is not, where the next thing gets added, a naming trap, a
+build or test invocation particular to this repo.
 
-**Bugs and feature requests are GitHub issues on this repo** — file them as you find them.
+**Fix a defect you spot rather than reporting it** — you have the package open and the
+context to be sure. File **a GitHub issue on this repo** only when the call isn't yours to
+make: you can't pin the cause down, two defensible fixes exist, or it's too large to ride on
+the work in hand. An open issue is a report, not a queue — implement one when you're asked
+to or when it's labelled `Approved`, then close it with `Closes #<n>`.
+
 Don't record work in the repo instead: no `TODO.md`, no `NOTES.md`, no `PLAN.md`. What you
 verified, tried, and decided belongs in the commit message and the PR body.
 
 ## This repo
 
-- **The password is PBKDF2, not a hash.** qBittorrent 4.2+ expects `@ByteArray(<base64 salt>:<base64 key>)` from PBKDF2-HMAC-SHA512, 100k iterations, 64-byte key; a plain hash written to `WebUI\Password` is silently ignored and the login just fails. Store the derived value only, never the plaintext.
-- **The first-boot seed must be a complete config.** qBittorrent preserves an existing file rather than re-deriving defaults, so a partial seed permanently leaves the save path and listen port wrong. Later boots upsert instead, which is what preserves settings the user changed in the Web UI.
-- **Deleting `lockfile` and `ipc-socket` on every boot is load-bearing.** A SIGKILLed container leaves both behind; the fresh PID namespace hands `qbittorrent-nox` the same low PID the stale lock recorded, so its liveness check passes and every instance exits 0 before binding — a silent crash loop with no error. Safe to delete because StartOS guarantees one instance per subcontainer.
-- **`peerPort` in `startos/utils.ts` and the port seeded in `configure-webui.sh` must stay in step.** They are two copies of the same fact, and a mismatch has qBittorrent listening where StartOS is not publishing.
-- **The log tail is not cosmetic.** `qbittorrent-nox` writes only to a file, so without it the service log goes silent after the image's banner and there is nothing to diagnose from.
-- **`kind: 'exists'` for FileBrowser Quantum is correct** — qBittorrent writes into its volume whether or not it is running. Both run as uid 1000, which is what makes the shared files work without permission handling.
+- **Never store the plaintext password.** `adminPasswordHash` holds only the PBKDF2 value `qbPasswordPbkdf2` produces; qBittorrent silently ignores a plain hash.
+- **Keep the first-boot seed in `configure-webui.sh` a complete config.** qBittorrent never re-derives defaults for a config file that exists.
+- **Don't drop the `lockfile`/`ipc-socket` deletion or the log tail from `configure-webui.sh`.** The first prevents a silent crash loop after a SIGKILL; the second is the service's only log.
+- **Change `peerPort` in `startos/utils.ts` and the port seeded in `configure-webui.sh` together.**
