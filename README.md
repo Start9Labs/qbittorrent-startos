@@ -59,6 +59,8 @@ What the script does on every boot, in order:
 
 Three settings are upserted for the reverse proxy and are not yours to change: host-header validation and CSRF protection are off, because StartOS's proxy rewrites the headers they check, and localhost auth is off so the password is always required.
 
+The password and reverse-proxy settings live in `[WebUI]`. The wrapper also updates their legacy `[Preferences]` entries if present: upstream's config migration copies those entries over the canonical ones before removing them. Download paths use only the `[BitTorrent]` session keys.
+
 ## Volume and Data Layout
 
 One volume, mounted twice at different subpaths.
@@ -92,6 +94,8 @@ All four are read reactively, so writing any of them restarts the service — wh
 **The password is stored the way qBittorrent stores it, not as a hash of convenience.** qBittorrent 4.2+ expects PBKDF2-HMAC-SHA512 with a random salt, 100,000 iterations, and a 64-byte key, framed as `@ByteArray(<salt>:<key>)`. A plain hash written to the older key is silently ignored — the login just fails with no error.
 
 **`qBittorrent.conf` is yours** apart from the keys listed above. Change anything else in the Web UI and it survives, because the script upserts rather than rewrites.
+
+Completed files can be downloaded directly through the Web UI: select a torrent, open its **Content** tab, and right-click one completed file to choose **Download**. NextExplorer and FileBrowser Quantum remain optional for broader file management.
 
 ## Dependencies
 
