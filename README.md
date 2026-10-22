@@ -35,11 +35,11 @@
 
 ## Image and Container Runtime
 
-The LinuxServer image, unmodified, but not started directly.
+The LinuxServer image, not started directly, with its CA store upgraded by the root `Dockerfile` (a temporary layer that comes out once upstream ships an image built on a fixed store).
 
 | Property      | Value                                                    |
 | ------------- | -------------------------------------------------------- |
-| Image         | `linuxserver/qbittorrent`                                |
+| Image         | `linuxserver/qbittorrent` + root `Dockerfile`            |
 | Architectures | x86_64, aarch64                                          |
 | Command       | A wrapper script, which then `exec`s the image's `/init` |
 
@@ -205,7 +205,7 @@ The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No du
 
 ```yaml
 package_id: qbittorrent
-image: linuxserver/qbittorrent
+image: linuxserver/qbittorrent + root Dockerfile (CA store upgrade)
 architectures:
   - x86_64
   - aarch64
