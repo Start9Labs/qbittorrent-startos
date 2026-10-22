@@ -55,12 +55,9 @@ Session\TempPath=/downloads/incomplete/
 [LegalNotice]
 Accepted=true
 
-[Preferences]
-Connection\PortRangeMin=6881
-Downloads\SavePath=/downloads/
-Downloads\TempPath=/downloads/incomplete/
-WebUI\Address=*
-WebUI\ServerDomains=*
+[WebUI]
+Address=*
+ServerDomains=*
 QBT_SEED_EOF
 fi
 
@@ -80,20 +77,24 @@ upsert() {
   ' "$CONF" > "$CONF.tmp" && mv "$CONF.tmp" "$CONF"
 }
 
-# Reverse-proxy compatibility + always-require-password.
-upsert Preferences 'WebUI\HostHeaderValidation' 'false'
-upsert Preferences 'WebUI\CSRFProtection' 'false'
-upsert Preferences 'WebUI\LocalHostAuth' 'false'
+upsert_webui() {
+  upsert WebUI "$1" "$2"
+  # Upstream's first upgrade overwrites new keys with any legacy values.
+  if grep -qF "WebUI\\$1=" "$CONF"; then
+    upsert Preferences "WebUI\\$1" "$2"
+  fi
+}
 
-# Download location (authoritative key lives in [BitTorrent]; the [Preferences]
-# keys are kept in sync for the WebUI display).
+# Reverse-proxy compatibility + always-require-password.
+upsert_webui HostHeaderValidation false
+upsert_webui CSRFProtection false
+upsert_webui LocalHostAuth false
+
 upsert BitTorrent 'Session\DefaultSavePath' "$SAVE/"
 upsert BitTorrent 'Session\TempPath' "$SAVE/incomplete/"
-upsert Preferences 'Downloads\SavePath' "$SAVE/"
-upsert Preferences 'Downloads\TempPath' "$SAVE/incomplete/"
 
 if [ -n "$QBT_PW_HASH" ]; then
-  upsert Preferences 'WebUI\Password_PBKDF2' "\"$QBT_PW_HASH\""
+  upsert_webui Password_PBKDF2 "\"$QBT_PW_HASH\""
 fi
 
 # Clear qBittorrent's stale single-instance guard. qbittorrent-nox writes a Qt

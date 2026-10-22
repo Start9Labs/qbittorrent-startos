@@ -44,6 +44,8 @@ Notes:
 - Use the "Add Torrent" button to paste a magnet link or upload a file
 - Right-click on a torrent to set priority, speed limits, and ratios
 
+To download a completed file to your browser, select its torrent, open the **Content** tab, and right-click a single completed file, then choose **Download**. This also works with local storage, without another file server installed.
+
 ## Bandwidth Management
 
 - Go to **Tools > Options > Speed** to set global speed limits
