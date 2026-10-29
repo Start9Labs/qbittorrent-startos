@@ -1,10 +1,10 @@
 import { i18n } from './i18n'
 import { sdk } from './sdk'
-import { peerPort, uiPort } from './utils'
+import { peerPort, uiHostId, uiPort } from './utils'
 
 export const setInterfaces = sdk.setupInterfaces(async ({ effects }) => {
   // Web UI — HTTP
-  const uiMulti = sdk.MultiHost.of(effects, 'ui-multi')
+  const uiMulti = sdk.MultiHost.of(effects, uiHostId)
   const uiOrigin = await uiMulti.bindPort(uiPort, {
     protocol: 'http',
     preferredExternalPort: uiPort,

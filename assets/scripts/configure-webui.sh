@@ -97,6 +97,10 @@ if [ -n "$QBT_PW_HASH" ]; then
   upsert_webui Password_PBKDF2 "\"$QBT_PW_HASH\""
 fi
 
+if [ -n "$QBT_API_KEY" ]; then
+  upsert_webui APIKey "$QBT_API_KEY"
+fi
+
 # Clear qBittorrent's stale single-instance guard. qbittorrent-nox writes a Qt
 # QLockFile (/config/qBittorrent/lockfile) plus an ipc-socket to enforce one
 # instance per profile, and removes them on a CLEAN exit. When StartOS stops

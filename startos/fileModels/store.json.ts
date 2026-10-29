@@ -6,6 +6,7 @@ import { sdk } from '../sdk'
 // (i.e. when the user runs "Set Admin Password").
 const shape = z.looseObject({
   adminPasswordHash: z.string().optional().catch(undefined),
+  apiKey: z.string().optional().catch(undefined),
   // Where completed downloads are saved. 'local' keeps them on this service's
   // own `main` volume (/downloads); 'filebrowser' writes them into FileBrowser
   // Quantum's data volume so the files are browsable there. Set via the "Set
