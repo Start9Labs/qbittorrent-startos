@@ -52,7 +52,7 @@ The LinuxServer image, not started directly, with its CA store upgraded by the r
 What the script does on every boot, in order:
 
 - **Seeds a complete config on a first boot.** qBittorrent preserves an existing config file rather than re-deriving defaults, so a partial seed would leave the save path and listen port wrong forever.
-- **Upserts the settings this package owns** into the existing file — the reverse-proxy flags, the save paths, and the password hash — preserving everything you have changed in the Web UI.
+- **Upserts the settings this package owns** into the existing file — the reverse-proxy flags, the save paths, the password hash, and the Web API key — preserving everything you have changed in the Web UI.
 - **Creates and chowns the download directories** to the runtime user, non-recursively so a large existing download tree is never re-owned.
 - **Clears qBittorrent's stale single-instance lock.** See [Health Checks](#health-checks) — this one is worth understanding.
 - **Tails qBittorrent's log file to stdout**, because `qbittorrent-nox` writes only to a file and the service log would otherwise go silent after the image's banner.
@@ -63,12 +63,14 @@ The password and reverse-proxy settings live in `[WebUI]`. The wrapper also upda
 
 ## Volume and Data Layout
 
-One volume, mounted twice at different subpaths.
+One volume, mounted twice at different subpaths; its root and `share/` are not mounted.
 
-| Volume | Mount Point                      | Purpose                                                           |
-| ------ | -------------------------------- | ----------------------------------------------------------------- |
-| `main` | its `config/` at `/config`       | `qBittorrent.conf`, categories, RSS feeds, logs, and `store.json` |
-| `main` | its `downloads/` at `/downloads` | Downloaded content and incomplete files, when saving locally      |
+| Volume | Mount Point                      | Purpose                                                      |
+| ------ | -------------------------------- | ------------------------------------------------------------ |
+| `main` | its `config/` at `/config`       | `qBittorrent.conf`, categories, RSS feeds, logs              |
+| `main` | its `downloads/` at `/downloads` | Downloaded content and incomplete files, when saving locally |
+| `main` | its root, not mounted            | `store.json`                                                 |
+| `main` | its `share/`, not mounted        | `api-key`, for dependents to mount read-only                 |
 
 The downloads mount matters more than it looks: the image's default save path is `/downloads`, and without a volume there the content would land on the container's ephemeral filesystem and vanish on every restart.
 
@@ -76,20 +78,22 @@ When downloads are routed to NextExplorer or FileBrowser Quantum, that service's
 
 ## File Models
 
-One model, and it is not qBittorrent's config — that file is written by the wrapper script inside the container, not by a file model.
+Two models, and neither is qBittorrent's config — that file is written by the wrapper script inside the container, not by a file model.
 
-| File         | Format | Modelled                | Written by      |
-| ------------ | ------ | ----------------------- | --------------- |
-| `store.json` | JSON   | Yes — `FileHelper.json` | The two actions |
+| File            | Format | Modelled                  | Written by                             |
+| --------------- | ------ | ------------------------- | -------------------------------------- |
+| `store.json`    | JSON   | Yes — `FileHelper.json`   | The two actions; init (`apiKey`)       |
+| `share/api-key` | text   | Yes — `FileHelper.string` | Every init, from `store.json` `apiKey` |
 
-| Key                   | Set by                | Notes                                                     |
-| --------------------- | --------------------- | --------------------------------------------------------- |
-| `adminPasswordHash`   | Set Admin Password    | The PBKDF2 value only — **the plaintext is never stored** |
-| `downloadTarget`      | Set Download Location | `local`, `nextexplorer` or `filebrowser`                  |
-| `nextexplorerSubpath` | Set Download Location | Kept across a switch away, so it reappears                |
-| `filebrowserSubpath`  | Set Download Location | Kept across a switch back to local, so it reappears       |
+| Key                   | Set by                | Notes                                                                              |
+| --------------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| `adminPasswordHash`   | Set Admin Password    | The PBKDF2 value only — **the plaintext is never stored**                          |
+| `apiKey`              | Init, when missing    | The Web API key: `qbt_` plus 28 letters and digits, the format qBittorrent accepts |
+| `downloadTarget`      | Set Download Location | `local`, `nextexplorer` or `filebrowser`                                           |
+| `nextexplorerSubpath` | Set Download Location | Kept across a switch away, so it reappears                                         |
+| `filebrowserSubpath`  | Set Download Location | Kept across a switch back to local, so it reappears                                |
 
-All four are read reactively, so writing any of them restarts the service — which is exactly what applies the change, since the wrapper script only runs at boot.
+All five are read reactively, so writing any of them restarts the service — which is exactly what applies the change, since the wrapper script only runs at boot. The wrapper upserts `apiKey` as `WebUI\APIKey`, so a key rolled or deleted in the Web UI is restored on the next start.
 
 **The password is stored the way qBittorrent stores it, not as a hash of convenience.** qBittorrent 4.2+ expects PBKDF2-HMAC-SHA512 with a random salt, 100,000 iterations, and a 64-byte key, framed as `@ByteArray(<salt>:<key>)`. A plain hash written to the older key is silently ignored — the login just fails with no error.
 
@@ -120,6 +124,8 @@ Two interfaces, and they exist for opposite reasons.
 | BitTorrent Peers | `peer` | p2p  | 6881 | Yes    | Inbound BitTorrent peer connections |
 
 **The peer port is raw TCP and is masked**, since there is nothing for a person to open. Without it qBittorrent can still make outbound connections, but no remote peer can connect in — which usually means noticeably worse performance on a swarm.
+
+**Dependents connect with the Web API key, not the password.** `share/api-key` on the `main` volume holds the bare key, no newline, alone in that directory; a dependent mounts `share/` read-only and sends `Authorization: Bearer <key>` to the Web UI's bridge address, resolved from the host id and port `startos/utils.ts` exports as `uiHostId` and `uiPort`. A key session reaches the Web API but not `auth/` or the static UI.
 
 **The peer port is duplicated in two places.** The interface declaration and the config the wrapper script seeds must agree, or qBittorrent listens somewhere StartOS is not publishing.
 
@@ -185,7 +191,7 @@ Because the script also tails qBittorrent's own log to stdout, the service log c
 
 The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No dump step and nothing excluded.
 
-- **Included:** `qBittorrent.conf` with the password hash and every Web UI setting, the torrent state, categories, RSS feeds, logs, `store.json`, **and every locally-saved download**.
+- **Included:** `qBittorrent.conf` with the password hash and every Web UI setting, the torrent state, categories, RSS feeds, logs, `store.json` (so the API key survives a restore), **and every locally-saved download**.
 - **Size:** with local downloads, this backup is as large as your download directory. Routing downloads to NextExplorer or FileBrowser Quantum moves that bulk into that service's backup instead — those files are outside this volume and are never captured here.
 - **Restore:** complete, and no task is raised — the password comes back with the store. Torrents resume against whatever save path is configured.
 
@@ -212,15 +218,17 @@ architectures:
 subcontainers:
   - qbittorrent-sub # the only container
 volumes:
-  main: its config/ at /config, its downloads/ at /downloads
+  main: its config/ at /config, its downloads/ at /downloads; store.json and share/api-key unmounted
 file_models:
   - store.json # qBittorrent.conf is written by the wrapper script, not modelled
+  - share/api-key # the Web API key dependents mount read-only
 startos_managed_env_vars:
   - PUID
   - PGID
   - TZ
   - WEBUI_PORT
   - QBT_PW_HASH # the PBKDF2 value; empty until the password action runs
+  - QBT_API_KEY # the Web API key from store.json
   - QBT_SAVE_PATH # resolved from the download-location action
 dependencies:
   - nextexplorer # optional, exists, >=2.2.7:0; only while it is the download target

@@ -18,6 +18,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const passwordHash = await storeJson
     .read((s) => s.adminPasswordHash)
     .const(effects)
+  const apiKey = await storeJson.read((s) => s.apiKey).const(effects)
 
   // Where downloads are saved (set via the "Set Download Location" action).
   // Read reactively so switching target restarts the service and re-mounts.
@@ -104,6 +105,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       // linuxserver images drop privileges to PUID:PGID and set TZ;
       // WEBUI_PORT pins the WebUI port to match the interface + health check;
       // QBT_PW_HASH carries the admin password hash (empty until set);
+      // QBT_API_KEY is the Web API key published to dependents;
       // QBT_SAVE_PATH is the resolved download directory inside the container.
       env: {
         PUID: '1000',
@@ -111,6 +113,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
         TZ: 'Etc/UTC',
         WEBUI_PORT: String(uiPort),
         QBT_PW_HASH: passwordHash ?? '',
+        QBT_API_KEY: apiKey ?? '',
         QBT_SAVE_PATH: savePath,
       },
     },

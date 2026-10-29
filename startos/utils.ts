@@ -3,6 +3,7 @@ import { i18n } from './i18n'
 
 // Shared constants for the qBittorrent package
 export const uiPort = 8080
+export const uiHostId = 'ui-multi'
 // Must match the peer port written in assets/scripts/configure-webui.sh
 export const peerPort = 6881
 
