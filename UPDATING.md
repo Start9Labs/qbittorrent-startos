@@ -22,9 +22,5 @@ dockerTag: 'linuxserver/qbittorrent:5.3.0',
 
 ## Applying the bump
 
-1. Follow the packaging guide's scrutiny tier for the jump. Read upstream's release notes and `Changelog` for a feature release; config migrations or raised requirements require the breaking-change pass.
-2. Edit `startos/manifest/index.ts` — update the `dockerTag` to the verified version.
-3. Edit `startos/versions/current.ts` — update the version string (e.g. `'5.3.0:0'`) and localized release notes. Spin off the outgoing version only if its existing `up` migration does work, as the guide's migration rule specifies.
-4. Check the keys in `assets/scripts/configure-webui.sh` against the new upstream source. Since 5.3.0, Web UI keys live in `[WebUI]`, not under `[Preferences]`. Upstream migrates existing settings and torrent state itself; do not duplicate its migrations in the wrapper.
-5. Update this file's version examples.
-6. Follow the packaging guide's SDK update and verification instructions, or the task's narrower verification gate when one is specified. Use `npm install`, not `npm ci`, in the cache-backed build workspace.
+1. Edit `startos/manifest/index.ts` — update the `dockerTag` to the verified version.
+2. Check the keys in `assets/scripts/configure-webui.sh` against the new upstream source. Web UI keys live in `[WebUI]`, not under `[Preferences]`.
