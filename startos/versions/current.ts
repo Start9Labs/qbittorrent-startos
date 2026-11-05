@@ -1,18 +1,18 @@
 import { VersionInfo, IMPOSSIBLE } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '5.3.0:1',
+  version: '5.3.0:2',
   releaseNotes: {
     en_US:
-      'Sonarr and Radarr on this server can connect to qBittorrent without its admin password.',
+      'Requires StartOS 0.4.1 or later. Fixes memory use growing while the service runs.',
     es_ES:
-      'Sonarr y Radarr en este servidor pueden conectarse a qBittorrent sin su contraseña de administrador.',
+      'Requiere StartOS 0.4.1 o posterior. Corrige el aumento del uso de memoria mientras el servicio está en ejecución.',
     de_DE:
-      'Sonarr und Radarr auf diesem Server können sich ohne das Admin-Passwort mit qBittorrent verbinden.',
+      'Erfordert StartOS 0.4.1 oder neuer. Behebt einen während der Laufzeit des Dienstes ansteigenden Speicherverbrauch.',
     pl_PL:
-      'Sonarr i Radarr na tym serwerze mogą łączyć się z qBittorrent bez jego hasła administratora.',
+      'Wymaga StartOS 0.4.1 lub nowszego. Naprawia wzrost zużycia pamięci podczas działania usługi.',
     fr_FR:
-      'Sonarr et Radarr sur ce serveur peuvent se connecter à qBittorrent sans son mot de passe administrateur.',
+      "Nécessite StartOS 0.4.1 ou une version ultérieure. Corrige l'augmentation de la consommation de mémoire pendant le fonctionnement du service.",
   },
   migrations: {
     up: async ({ effects }) => {},
