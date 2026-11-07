@@ -7,9 +7,7 @@
 # PUID. Writing here, before qBittorrent starts, also avoids qBittorrent's
 # on-shutdown config rewrite clobbering our changes.
 #
-# - On first boot (no config) it seeds a COMPLETE config: qBittorrent preserves
-#   an existing file and won't re-derive defaults, so a partial seed would leave
-#   the save path at /config/Downloads and the listen port randomized.
+# - qBittorrent preserves an existing config instead of re-deriving defaults.
 # - The WebUI flags make logins work behind the StartOS reverse proxy
 #   (HostHeaderValidation/CSRF) and always require the password (LocalHostAuth).
 # - The admin password (qBittorrent PBKDF2, already framed) arrives via the
@@ -27,8 +25,10 @@
 #   logs are visible in `start-cli package logs` (qbittorrent-nox otherwise
 #   only writes to a file, leaving the StartOS log silent).
 #
-# The peer port (6881) here must match `peerPort` in startos/utils.ts.
 set -e
+
+: "${QBT_PEER_PORT:?Missing internal peer port}"
+: "${QBT_ANNOUNCE_PORT:?Missing assigned peer port}"
 
 CONF=/config/qBittorrent/qBittorrent.conf
 mkdir -p /config/qBittorrent
@@ -49,7 +49,6 @@ if [ ! -f "$CONF" ]; then
   cat > "$CONF" <<'QBT_SEED_EOF'
 [BitTorrent]
 Session\DefaultSavePath=/downloads/
-Session\Port=6881
 Session\TempPath=/downloads/incomplete/
 
 [LegalNotice]
@@ -77,18 +76,27 @@ upsert() {
   ' "$CONF" > "$CONF.tmp" && mv "$CONF.tmp" "$CONF"
 }
 
-upsert_webui() {
-  upsert WebUI "$1" "$2"
+upsert_migrated() {
+  upsert "$1" "$2" "$3"
   # Upstream's first upgrade overwrites new keys with any legacy values.
-  if grep -qF "WebUI\\$1=" "$CONF"; then
-    upsert Preferences "WebUI\\$1" "$2"
+  if grep -qF "$4=" "$CONF"; then
+    upsert Preferences "$4" "$3"
   fi
+}
+
+upsert_webui() {
+  upsert_migrated WebUI "$1" "$2" "WebUI\\$1"
 }
 
 # Reverse-proxy compatibility + always-require-password.
 upsert_webui HostHeaderValidation false
 upsert_webui CSRFProtection false
 upsert_webui LocalHostAuth false
+
+upsert_migrated BitTorrent 'Session\Port' "$QBT_PEER_PORT" 'Connection\PortRangeMin'
+upsert_migrated BitTorrent 'Session\UseRandomPort' false 'General\UseRandomPort'
+upsert BitTorrent 'Session\AnnouncePort' "$QBT_ANNOUNCE_PORT"
+upsert_migrated Network PortForwardingEnabled false 'Connection\UPnP'
 
 upsert BitTorrent 'Session\DefaultSavePath' "$SAVE/"
 upsert BitTorrent 'Session\TempPath' "$SAVE/incomplete/"

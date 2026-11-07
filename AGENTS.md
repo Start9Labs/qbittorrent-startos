@@ -37,4 +37,4 @@ verified, tried, and decided belongs in the commit message and the PR body.
 - **Never store the plaintext password.** `adminPasswordHash` holds only the PBKDF2 value `qbPasswordPbkdf2` produces; qBittorrent silently ignores a plain hash.
 - **Keep the first-boot seed in `configure-webui.sh` a complete config.** qBittorrent never re-derives defaults for a config file that exists.
 - **Don't drop the `lockfile`/`ipc-socket` deletion or the log tail from `configure-webui.sh`.** The first prevents a silent crash loop after a SIGKILL; the second is the service's only log.
-- **Change `peerPort` in `startos/utils.ts` and the port seeded in `configure-webui.sh` together.**
+- **Keep the peer listener on `peerPort`.** `Session\AnnouncePort` follows StartOS's external assignment; changing only the listener breaks forwarding.
