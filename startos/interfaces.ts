@@ -1,6 +1,6 @@
 import { i18n } from './i18n'
 import { sdk } from './sdk'
-import { peerPort, uiHostId, uiPort } from './utils'
+import { peerHostId, peerPort, uiHostId, uiPort } from './utils'
 
 export const setInterfaces = sdk.setupInterfaces(async ({ effects }) => {
   // Web UI — HTTP
@@ -26,7 +26,7 @@ export const setInterfaces = sdk.setupInterfaces(async ({ effects }) => {
 
   // BitTorrent peer port — raw TCP, no HTTP. Lets remote peers connect
   // inbound; without it qBittorrent can only make outbound connections.
-  const peerMulti = sdk.MultiHost.of(effects, 'peer-multi')
+  const peerMulti = sdk.MultiHost.of(effects, peerHostId)
   const peerOrigin = await peerMulti.bindPort(peerPort, {
     protocol: null,
     addSsl: null,

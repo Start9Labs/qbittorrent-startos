@@ -4,7 +4,7 @@ import { i18n } from './i18n'
 // Shared constants for the qBittorrent package
 export const uiPort = 8080
 export const uiHostId = 'ui-multi'
-// Must match the peer port written in assets/scripts/configure-webui.sh
+export const peerHostId = 'peer-multi'
 export const peerPort = 6881
 
 // Where NextExplorer's or FileBrowser Quantum's data volume is mounted when it is the download target.

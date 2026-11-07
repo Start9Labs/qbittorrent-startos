@@ -27,8 +27,10 @@
 #   logs are visible in `start-cli package logs` (qbittorrent-nox otherwise
 #   only writes to a file, leaving the StartOS log silent).
 #
-# The peer port (6881) here must match `peerPort` in startos/utils.ts.
 set -e
+
+: "${QBT_PEER_PORT:?Missing internal peer port}"
+: "${QBT_ANNOUNCE_PORT:?Missing assigned peer port}"
 
 CONF=/config/qBittorrent/qBittorrent.conf
 mkdir -p /config/qBittorrent
@@ -49,7 +51,6 @@ if [ ! -f "$CONF" ]; then
   cat > "$CONF" <<'QBT_SEED_EOF'
 [BitTorrent]
 Session\DefaultSavePath=/downloads/
-Session\Port=6881
 Session\TempPath=/downloads/incomplete/
 
 [LegalNotice]
@@ -77,18 +78,27 @@ upsert() {
   ' "$CONF" > "$CONF.tmp" && mv "$CONF.tmp" "$CONF"
 }
 
-upsert_webui() {
-  upsert WebUI "$1" "$2"
+upsert_migrated() {
+  upsert "$1" "$2" "$3"
   # Upstream's first upgrade overwrites new keys with any legacy values.
-  if grep -qF "WebUI\\$1=" "$CONF"; then
-    upsert Preferences "WebUI\\$1" "$2"
+  if grep -qF "$4=" "$CONF"; then
+    upsert Preferences "$4" "$3"
   fi
+}
+
+upsert_webui() {
+  upsert_migrated WebUI "$1" "$2" "WebUI\\$1"
 }
 
 # Reverse-proxy compatibility + always-require-password.
 upsert_webui HostHeaderValidation false
 upsert_webui CSRFProtection false
 upsert_webui LocalHostAuth false
+
+upsert_migrated BitTorrent 'Session\Port' "$QBT_PEER_PORT" 'Connection\PortRangeMin'
+upsert_migrated BitTorrent 'Session\UseRandomPort' false 'General\UseRandomPort'
+upsert BitTorrent 'Session\AnnouncePort' "$QBT_ANNOUNCE_PORT"
+upsert_migrated Network PortForwardingEnabled false 'Connection\UPnP'
 
 upsert BitTorrent 'Session\DefaultSavePath' "$SAVE/"
 upsert BitTorrent 'Session\TempPath' "$SAVE/incomplete/"
