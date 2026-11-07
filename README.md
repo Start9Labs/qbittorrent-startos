@@ -49,9 +49,9 @@ The LinuxServer image, not started directly, with its CA store upgraded by the r
 
 **The wrapper script is where all of this package's configuration happens**, and it runs inside the container as PID 1 before s6-overlay takes over. It has to: `/config/qBittorrent` is owned by the container's `PUID`, which the service context cannot write to, and qBittorrent rewrites its own config on shutdown, so anything written while it runs is lost. `runAsInit` keeps s6 as PID 1 after the handoff.
 
-What the script does on every boot, in order:
+What the script does on every boot:
 
-- **Seeds a complete config on a first boot.** qBittorrent preserves an existing config file rather than re-deriving defaults, so a partial seed would leave the save path and listen port wrong forever.
+- **Seeds a config on first boot.** The seed and boot-time upserts populate the required settings before qBittorrent starts; qBittorrent preserves an existing file rather than re-deriving defaults.
 - **Upserts the settings this package owns** into the existing file — the reverse-proxy flags, peer listen and announce ports, disabled automatic port forwarding, the save paths, the password hash, and the Web API key — preserving everything you have changed in the Web UI.
 - **Creates and chowns the download directories** to the runtime user, non-recursively so a large existing download tree is never re-owned.
 - **Clears qBittorrent's stale single-instance lock.** See [Health Checks](#health-checks) — this one is worth understanding.
@@ -118,10 +118,10 @@ qBittorrent writes into the target's volume whether or not that service is runni
 
 Two interfaces, and they exist for opposite reasons.
 
-| Interface        | Id     | Type | Internal port | Masked | Description                         |
-| ---------------- | ------ | ---- | ------------- | ------ | ----------------------------------- |
-| Web UI           | `ui`   | ui   | 8080 | No     | The qBittorrent web interface       |
-| BitTorrent Peers | `peer` | p2p  | 6881 | Yes    | Inbound BitTorrent peer connections |
+| Interface        | Id     | Type | Internal port | Masked | Description                        |
+| ---------------- | ------ | ---- | ------------- | ------ | ---------------------------------- |
+| Web UI           | `ui`   | ui   | 8080          | No     | The qBittorrent web interface       |
+| BitTorrent Peers | `peer` | p2p  | 6881          | Yes    | Inbound BitTorrent peer connections |
 
 **The peer port is raw TCP and is masked**, since there is nothing for a person to open. Without it qBittorrent can still make outbound connections, but no remote peer can connect in — which usually means noticeably worse performance on a swarm.
 

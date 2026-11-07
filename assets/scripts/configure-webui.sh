@@ -7,9 +7,7 @@
 # PUID. Writing here, before qBittorrent starts, also avoids qBittorrent's
 # on-shutdown config rewrite clobbering our changes.
 #
-# - On first boot (no config) it seeds a COMPLETE config: qBittorrent preserves
-#   an existing file and won't re-derive defaults, so a partial seed would leave
-#   the save path at /config/Downloads and the listen port randomized.
+# - qBittorrent preserves an existing config instead of re-deriving defaults.
 # - The WebUI flags make logins work behind the StartOS reverse proxy
 #   (HostHeaderValidation/CSRF) and always require the password (LocalHostAuth).
 # - The admin password (qBittorrent PBKDF2, already framed) arrives via the
