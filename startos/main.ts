@@ -3,7 +3,13 @@ import { manifest as nextexplorerManifest } from 'nextexplorer-startos/startos/m
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import { storeJson } from './fileModels/store.json'
-import { filebrowserMountpoint, nextexplorerMountpoint, uiPort } from './utils'
+import {
+  filebrowserMountpoint,
+  nextexplorerMountpoint,
+  peerHostId,
+  peerPort,
+  uiPort,
+} from './utils'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   console.info(i18n('Starting qBittorrent!'))
@@ -19,6 +25,16 @@ export const main = sdk.setupMain(async ({ effects }) => {
     .read((s) => s.adminPasswordHash)
     .const(effects)
   const apiKey = await storeJson.read((s) => s.apiKey).const(effects)
+  const announcePort = await sdk.host
+    .getOwn(
+      effects,
+      peerHostId,
+      (host) => host?.bindings[peerPort]?.net.assignedPort,
+    )
+    .const()
+  if (announcePort == null) {
+    throw new Error('The BitTorrent peer binding has no assigned port')
+  }
 
   // Where downloads are saved (set via the "Set Download Location" action).
   // Read reactively so switching target restarts the service and re-mounts.
@@ -112,6 +128,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
         PGID: '1000',
         TZ: 'Etc/UTC',
         WEBUI_PORT: String(uiPort),
+        QBT_PEER_PORT: String(peerPort),
+        QBT_ANNOUNCE_PORT: String(announcePort),
         QBT_PW_HASH: passwordHash ?? '',
         QBT_API_KEY: apiKey ?? '',
         QBT_SAVE_PATH: savePath,

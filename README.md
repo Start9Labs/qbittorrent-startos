@@ -49,17 +49,17 @@ The LinuxServer image, not started directly, with its CA store upgraded by the r
 
 **The wrapper script is where all of this package's configuration happens**, and it runs inside the container as PID 1 before s6-overlay takes over. It has to: `/config/qBittorrent` is owned by the container's `PUID`, which the service context cannot write to, and qBittorrent rewrites its own config on shutdown, so anything written while it runs is lost. `runAsInit` keeps s6 as PID 1 after the handoff.
 
-What the script does on every boot, in order:
+What the script does on every boot:
 
-- **Seeds a complete config on a first boot.** qBittorrent preserves an existing config file rather than re-deriving defaults, so a partial seed would leave the save path and listen port wrong forever.
-- **Upserts the settings this package owns** into the existing file — the reverse-proxy flags, the save paths, the password hash, and the Web API key — preserving everything you have changed in the Web UI.
+- **Seeds a config on first boot.** The seed and boot-time upserts populate the required settings before qBittorrent starts; qBittorrent preserves an existing file rather than re-deriving defaults.
+- **Upserts the settings this package owns** into the existing file — the reverse-proxy flags, peer listen and announce ports, disabled automatic port forwarding, the save paths, the password hash, and the Web API key — preserving everything you have changed in the Web UI.
 - **Creates and chowns the download directories** to the runtime user, non-recursively so a large existing download tree is never re-owned.
 - **Clears qBittorrent's stale single-instance lock.** See [Health Checks](#health-checks) — this one is worth understanding.
 - **Tails qBittorrent's log file to stdout**, because `qbittorrent-nox` writes only to a file and the service log would otherwise go silent after the image's banner.
 
 Three settings are upserted for the reverse proxy and are not yours to change: host-header validation and CSRF protection are off, because StartOS's proxy rewrites the headers they check, and localhost auth is off so the password is always required.
 
-The password and reverse-proxy settings live in `[WebUI]`. The wrapper also updates their legacy `[Preferences]` entries if present: upstream's config migration copies those entries over the canonical ones before removing them. Download paths use only the `[BitTorrent]` session keys.
+The password and reverse-proxy settings live in `[WebUI]`; peer ports live in `[BitTorrent]`, and automatic port forwarding is disabled in `[Network]`. The wrapper also updates legacy `[Preferences]` entries for managed Web UI and network settings if present: upstream's config migration copies those entries over the canonical ones before removing them. Download paths use only the `[BitTorrent]` session keys.
 
 ## Volume and Data Layout
 
@@ -118,16 +118,16 @@ qBittorrent writes into the target's volume whether or not that service is runni
 
 Two interfaces, and they exist for opposite reasons.
 
-| Interface        | Id     | Type | Port | Masked | Description                         |
-| ---------------- | ------ | ---- | ---- | ------ | ----------------------------------- |
-| Web UI           | `ui`   | ui   | 8080 | No     | The qBittorrent web interface       |
-| BitTorrent Peers | `peer` | p2p  | 6881 | Yes    | Inbound BitTorrent peer connections |
+| Interface        | Id     | Type | Internal port | Masked | Description                        |
+| ---------------- | ------ | ---- | ------------- | ------ | ---------------------------------- |
+| Web UI           | `ui`   | ui   | 8080          | No     | The qBittorrent web interface       |
+| BitTorrent Peers | `peer` | p2p  | 6881          | Yes    | Inbound BitTorrent peer connections |
 
 **The peer port is raw TCP and is masked**, since there is nothing for a person to open. Without it qBittorrent can still make outbound connections, but no remote peer can connect in — which usually means noticeably worse performance on a swarm.
 
 **Dependents connect with the Web API key, not the password.** `share/api-key` on the `main` volume holds the bare key, no newline, alone in that directory; a dependent mounts `share/` read-only and sends `Authorization: Bearer <key>` to the Web UI's bridge address, resolved from the host id and port `startos/utils.ts` exports as `uiHostId` and `uiPort`. A key session reaches the Web API but not `auth/` or the static UI.
 
-**The peer port is duplicated in two places.** The interface declaration and the config the wrapper script seeds must agree, or qBittorrent listens somewhere StartOS is not publishing.
+**The peer listener stays on internal port 6881.** StartOS prefers external port 6881 but can assign another. `main` reactively reads `peer-multi`'s `bindings[peerPort].net.assignedPort`; a change restarts the daemon. On every boot, the wrapper pins `Session\Port` to the internal `peerPort` and sets `Session\AnnouncePort` to the assigned external port. qBittorrent passes that override to libtorrent for tracker and DHT announcements. **Limitation:** libtorrent 2.1.2 ignores this override in its outgoing peer extension handshake, which still reports 6881; peers can propagate that incorrect endpoint through PEX. The listener must not follow the external assignment: StartOS still forwards to internal 6881. Automatic port forwarding (UPnP/NAT-PMP) and legacy random-port selection are disabled; StartOS owns the mapping.
 
 ## Installation and First-Run Flow
 
@@ -227,6 +227,8 @@ startos_managed_env_vars:
   - PGID
   - TZ
   - WEBUI_PORT
+  - QBT_PEER_PORT # internal listener from peerPort
+  - QBT_ANNOUNCE_PORT # reactive external assignment from peer-multi
   - QBT_PW_HASH # the PBKDF2 value; empty until the password action runs
   - QBT_API_KEY # the Web API key from store.json
   - QBT_SAVE_PATH # resolved from the download-location action
