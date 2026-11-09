@@ -105,12 +105,12 @@ Completed files can be downloaded directly through the Web UI: select a torrent,
 
 Two, both optional, and each only while it is the chosen download target.
 
-| Dependency     | Kind     | Version range                         | Required                              |
-| -------------- | -------- | ------------------------------------- | ------------------------------------- |
-| `nextexplorer` | `exists` | `>=2.2.7:0`                           | Only while downloads are routed there |
-| `filebrowser`  | `exists` | `>=2.63.18:3 \|\| >=#quantum:1.5.2:0` | Only while downloads are routed there |
+| Dependency     | Kind     | Version range               | Required                              |
+| -------------- | -------- | --------------------------- | ------------------------------------- |
+| `nextexplorer` | `exists` | `>=2.2.7:0`                 | Only while downloads are routed there |
+| `filebrowser`  | `exists` | `>=#quantum:2.0.2-stable:3` | Only while downloads are routed there |
 
-qBittorrent writes into the target's volume whether or not that service is running, so it only needs to be installed for the volume to exist. Declaring it this way drives the "isn't installed" warning without ever blocking qBittorrent's own startup. The `filebrowser` range admits both the File Browser package and its FileBrowser Quantum flavor (`#quantum`); both keep their files in a `data` volume.
+qBittorrent writes into the target's volume whether or not that service is running, so it only needs to be installed for the volume to exist. Declaring it this way drives the "isn't installed" warning without ever blocking qBittorrent's own startup. FileBrowser Quantum keeps its files in its `data` volume.
 
 **The services agree on a uid.** NextExplorer and FileBrowser Quantum both serve their volume as uid 1000, which is the same uid qBittorrent's `PUID` drops to, so files qBittorrent writes there are immediately readable and manageable in that service with no permission work.
 
@@ -118,8 +118,8 @@ qBittorrent writes into the target's volume whether or not that service is runni
 
 Two interfaces, and they exist for opposite reasons.
 
-| Interface        | Id     | Type | Internal port | Masked | Description                        |
-| ---------------- | ------ | ---- | ------------- | ------ | ---------------------------------- |
+| Interface        | Id     | Type | Internal port | Masked | Description                         |
+| ---------------- | ------ | ---- | ------------- | ------ | ----------------------------------- |
 | Web UI           | `ui`   | ui   | 8080          | No     | The qBittorrent web interface       |
 | BitTorrent Peers | `peer` | p2p  | 6881          | Yes    | Inbound BitTorrent peer connections |
 
@@ -234,7 +234,7 @@ startos_managed_env_vars:
   - QBT_SAVE_PATH # resolved from the download-location action
 dependencies:
   - nextexplorer # optional, exists, >=2.2.7:0; only while it is the download target
-  - filebrowser # optional, exists, >=2.63.18:3 || >=#quantum:1.5.2:0; only while it is the download target
+  - filebrowser # optional, exists, >=#quantum:2.0.2-stable:3; only while it is the download target
 interfaces:
   ui: { type: ui, port: 8080 }
   peer: { type: p2p, port: 6881 } # masked; raw TCP
