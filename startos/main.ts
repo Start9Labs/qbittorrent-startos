@@ -1,4 +1,4 @@
-import { manifest as filebrowserManifest } from 'filebrowser-startos/startos/manifest'
+import { manifest as filebrowserManifest } from 'filebrowser-quantum-startos/startos/manifest'
 import { manifest as nextexplorerManifest } from 'nextexplorer-startos/startos/manifest'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
