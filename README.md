@@ -63,14 +63,14 @@ The password and reverse-proxy settings live in `[WebUI]`; peer ports live in `[
 
 ## Volume and Data Layout
 
-One volume, mounted twice at different subpaths; its root and `share/` are not mounted.
+Two volumes. `main` is mounted twice at different subpaths, its root unmounted; `public` is not mounted here.
 
-| Volume | Mount Point                      | Purpose                                                      |
-| ------ | -------------------------------- | ------------------------------------------------------------ |
-| `main` | its `config/` at `/config`       | `qBittorrent.conf`, categories, RSS feeds, logs              |
-| `main` | its `downloads/` at `/downloads` | Downloaded content and incomplete files, when saving locally |
-| `main` | its root, not mounted            | `store.json`                                                 |
-| `main` | its `share/`, not mounted        | `api-key`, for dependents to mount read-only                 |
+| Volume   | Mount Point                      | Purpose                                                      |
+| -------- | -------------------------------- | ------------------------------------------------------------ |
+| `main`   | its `config/` at `/config`       | `qBittorrent.conf`, categories, RSS feeds, logs              |
+| `main`   | its `downloads/` at `/downloads` | Downloaded content and incomplete files, when saving locally |
+| `main`   | its root, not mounted            | `store.json`                                                 |
+| `public` | not mounted                      | `api-key`, for dependents to mount read-only                 |
 
 The downloads mount matters more than it looks: the image's default save path is `/downloads`, and without a volume there the content would land on the container's ephemeral filesystem and vanish on every restart.
 
@@ -80,10 +80,10 @@ When downloads are routed to NextExplorer or FileBrowser Quantum, that service's
 
 Two models, and neither is qBittorrent's config — that file is written by the wrapper script inside the container, not by a file model.
 
-| File            | Format | Modelled                  | Written by                             |
-| --------------- | ------ | ------------------------- | -------------------------------------- |
-| `store.json`    | JSON   | Yes — `FileHelper.json`   | The two actions; init (`apiKey`)       |
-| `share/api-key` | text   | Yes — `FileHelper.string` | Every init, from `store.json` `apiKey` |
+| File                 | Format | Modelled                  | Written by                             |
+| -------------------- | ------ | ------------------------- | -------------------------------------- |
+| `store.json`         | JSON   | Yes — `FileHelper.json`   | The two actions; init (`apiKey`)       |
+| `api-key` (`public`) | text   | Yes — `FileHelper.string` | Every init, from `store.json` `apiKey` |
 
 | Key                   | Set by                | Notes                                                                              |
 | --------------------- | --------------------- | ---------------------------------------------------------------------------------- |
@@ -125,7 +125,7 @@ Two interfaces, and they exist for opposite reasons.
 
 **The peer port is raw TCP and is masked**, since there is nothing for a person to open. Without it qBittorrent can still make outbound connections, but no remote peer can connect in — which usually means noticeably worse performance on a swarm.
 
-**Dependents connect with the Web API key, not the password.** `share/api-key` on the `main` volume holds the bare key, no newline, alone in that directory; a dependent mounts `share/` read-only and sends `Authorization: Bearer <key>` to the Web UI's bridge address, resolved from the host id and port `startos/utils.ts` exports as `uiHostId` and `uiPort`. A key session reaches the Web API but not `auth/` or the static UI.
+**Dependents connect with the Web API key, not the password.** `api-key` on the `public` volume holds the bare key, no newline, alone on that volume; a dependent mounts `public` read-only and sends `Authorization: Bearer <key>` to the Web UI's bridge address, resolved from the host id and port `startos/utils.ts` exports as `uiHostId` and `uiPort`. A key session reaches the Web API but not `auth/` or the static UI.
 
 **The peer listener stays on internal port 6881.** StartOS prefers external port 6881 but can assign another. `main` reactively reads `peer-multi`'s `bindings[peerPort].net.assignedPort`; a change restarts the daemon. On every boot, the wrapper pins `Session\Port` to the internal `peerPort` and sets `Session\AnnouncePort` to the assigned external port. qBittorrent passes that override to libtorrent for tracker and DHT announcements. **Limitation:** libtorrent 2.1.2 ignores this override in its outgoing peer extension handshake, which still reports 6881; peers can propagate that incorrect endpoint through PEX. The listener must not follow the external assignment: StartOS still forwards to internal 6881. Automatic port forwarding (UPnP/NAT-PMP) and legacy random-port selection are disabled; StartOS owns the mapping.
 
@@ -189,7 +189,7 @@ Because the script also tails qBittorrent's own log to stdout, the service log c
 
 ## Backups and Restore
 
-The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No dump step and nothing excluded.
+The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No dump step and nothing excluded. The `public` volume is not backed up; init rewrites `api-key` from `store.json`.
 
 - **Included:** `qBittorrent.conf` with the password hash and every Web UI setting, the torrent state, categories, RSS feeds, logs, `store.json` (so the API key survives a restore), **and every locally-saved download**.
 - **Size:** with local downloads, this backup is as large as your download directory. Routing downloads to NextExplorer or FileBrowser Quantum moves that bulk into that service's backup instead — those files are outside this volume and are never captured here.
@@ -218,10 +218,11 @@ architectures:
 subcontainers:
   - qbittorrent-sub # the only container
 volumes:
-  main: its config/ at /config, its downloads/ at /downloads; store.json and share/api-key unmounted
+  main: its config/ at /config, its downloads/ at /downloads; store.json unmounted
+  public: api-key, unmounted; dependents mount it read-only
 file_models:
   - store.json # qBittorrent.conf is written by the wrapper script, not modelled
-  - share/api-key # the Web API key dependents mount read-only
+  - public/api-key # the Web API key dependents mount read-only
 startos_managed_env_vars:
   - PUID
   - PGID

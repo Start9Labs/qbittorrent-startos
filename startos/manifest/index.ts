@@ -10,7 +10,7 @@ export const manifest = setupManifest({
   marketingUrl: 'https://www.qbittorrent.org/',
   donationUrl: 'https://www.qbittorrent.org/donate',
   description: { short, long },
-  volumes: ['main'],
+  volumes: ['main', 'public'],
   images: {
     qbittorrent: {
       source: {
