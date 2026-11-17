@@ -1,24 +1,18 @@
-import { rm } from 'fs/promises'
 import { VersionInfo, IMPOSSIBLE } from '@start9labs/start-sdk'
-import { sdk } from '../sdk'
 
 export const current = VersionInfo.of({
-  version: '5.3.0:5',
+  version: '5.3.0:6',
   releaseNotes: {
-    en_US: 'StartOS package improvements; no change to qBittorrent.',
-    es_ES: 'Mejoras del paquete de StartOS; sin cambios en qBittorrent.',
-    de_DE: 'Verbesserungen am StartOS-Paket; keine Änderung an qBittorrent.',
-    pl_PL: 'Ulepszenia pakietu StartOS; bez zmian w qBittorrent.',
+    en_US:
+      'Fixed first-run API-key initialization for connections from other services. Existing credentials are preserved. Requires StartOS 0.4.2 or later.',
+    es_ES:
+      'Corregida la inicialización de la clave API en el primer inicio para conexiones desde otros servicios. Se conservan las credenciales existentes. Requiere StartOS 0.4.2 o posterior.',
+    de_DE:
+      'API-Schlüsselinitialisierung beim ersten Start für Verbindungen anderer Dienste korrigiert. Bestehende Zugangsdaten bleiben erhalten. Erfordert StartOS 0.4.2 oder neuer.',
+    pl_PL:
+      'Naprawiono inicjalizację klucza API przy pierwszym uruchomieniu dla połączeń z innych usług. Istniejące dane logowania są zachowywane. Wymaga StartOS 0.4.2 lub nowszego.',
     fr_FR:
-      'Améliorations du paquet StartOS ; aucun changement pour qBittorrent.',
+      'Correction de l’initialisation de la clé API au premier démarrage pour les connexions depuis d’autres services. Les identifiants existants sont conservés. Nécessite StartOS 0.4.2 ou ultérieur.',
   },
-  migrations: {
-    up: async () => {
-      await rm(sdk.volumes.main.subpath('share'), {
-        recursive: true,
-        force: true,
-      })
-    },
-    down: IMPOSSIBLE,
-  },
+  migrations: { up: async () => {}, down: IMPOSSIBLE },
 })
