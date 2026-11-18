@@ -8,6 +8,7 @@ import {
   nextexplorerMountpoint,
   peerHostId,
   peerPort,
+  resolveSharedDownloadPath,
   uiPort,
 } from './utils'
 
@@ -41,11 +42,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const downloadTarget = await storeJson
     .read((s) => s.downloadTarget)
     .const(effects)
-  const filebrowserSubpath = await storeJson
-    .read((s) => s.filebrowserSubpath)
-    .const(effects)
-  const nextexplorerSubpath = await storeJson
-    .read((s) => s.nextexplorerSubpath)
+  const sharedDownloadPath = await storeJson
+    .read(resolveSharedDownloadPath)
     .const(effects)
 
   let mounts = sdk.Mounts.of()
@@ -78,12 +76,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // Quantum serves that volume as uid 1000 — the same uid qBittorrent's PUID
   // drops to — so files qBittorrent writes are immediately readable and
   // browsable there.
-  let savePath = '/downloads'
+  const savePath = sharedDownloadPath ?? '/downloads'
   if (downloadTarget === 'nextexplorer') {
-    const subfolder =
-      (nextexplorerSubpath ?? 'Files/qbittorrent').replace(/^\/+|\/+$/g, '') ||
-      'Files/qbittorrent'
-    savePath = `${nextexplorerMountpoint}/${subfolder}`
     mounts = mounts.mountDependency<typeof nextexplorerManifest>({
       dependencyId: 'nextexplorer',
       volumeId: 'data',
@@ -93,10 +87,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
     })
   }
   if (downloadTarget === 'filebrowser') {
-    const subfolder =
-      (filebrowserSubpath ?? 'qbittorrent').replace(/^\/+|\/+$/g, '') ||
-      'qbittorrent'
-    savePath = `${filebrowserMountpoint}/${subfolder}`
     mounts = mounts.mountDependency<typeof filebrowserManifest>({
       dependencyId: 'filebrowser',
       volumeId: 'data',

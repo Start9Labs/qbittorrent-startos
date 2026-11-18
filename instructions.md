@@ -35,6 +35,7 @@ To go back, run the action again and choose **Local storage**.
 Notes:
 
 - Changing the location affects **new** downloads only — it does not move files you already downloaded.
+- qBittorrent shares the selected NextExplorer or FileBrowser Quantum download folder with compatible services automatically, even while stopped. Choose the location here rather than letting another service change qBittorrent's global save path. Local storage is private and is not shared.
 - Inside qBittorrent's own **Tools > Options > Directories**, the save path is managed for you; keep downloads under the active location (`/downloads`, `/mnt/nextexplorer` or `/mnt/filebrowser`, whichever is selected). Paths outside the mounted locations are not stored and will be lost on restart.
 - You can still add custom download folders and automatic file management within the active location.
 
