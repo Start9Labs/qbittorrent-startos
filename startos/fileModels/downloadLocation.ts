@@ -4,11 +4,13 @@ import { sdk } from '../sdk'
 export const downloadLocationFile = 'download-location.json'
 
 /**
- * qBittorrent owns this persisted absolute shared download root; null means private storage.
- * Kept current while stopped, independent of daemon availability.
+ * The shared download root qBittorrent saves to; null for local storage.
+ * Valid only with the file manager's volume mounted at `nextexplorerMountpoint`
+ * or `filebrowserMountpoint`. Follows the persisted selection, including while
+ * qBittorrent is stopped.
  */
 export const downloadLocationShape = z.looseObject({
-  downloadPath: z.string().nullable(),
+  downloadPath: z.string().nullable().catch(null),
 })
 
 export const downloadLocationJson = FileHelper.json(
