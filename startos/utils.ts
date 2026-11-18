@@ -1,5 +1,6 @@
 import { pbkdf2Sync, randomBytes } from 'node:crypto'
 import { i18n } from './i18n'
+import type { storeJson } from './fileModels/store.json'
 
 // Shared constants for the qBittorrent package
 export const uiPort = 8080
@@ -10,6 +11,29 @@ export const peerPort = 6881
 // Where NextExplorer's or FileBrowser Quantum's data volume is mounted when it is the download target.
 export const nextexplorerMountpoint = '/mnt/nextexplorer'
 export const filebrowserMountpoint = '/mnt/filebrowser'
+
+export function resolveSharedDownloadPath(
+  store: Pick<
+    ReturnType<typeof storeJson.validate>,
+    'downloadTarget' | 'nextexplorerSubpath' | 'filebrowserSubpath'
+  > | null,
+): string | null {
+  if (store?.downloadTarget === 'nextexplorer') {
+    const subfolder =
+      (store.nextexplorerSubpath ?? 'Files/qbittorrent').replace(
+        /^\/+|\/+$/g,
+        '',
+      ) || 'Files/qbittorrent'
+    return `${nextexplorerMountpoint}/${subfolder}`
+  }
+  if (store?.downloadTarget === 'filebrowser') {
+    const subfolder =
+      (store.filebrowserSubpath ?? 'qbittorrent').replace(/^\/+|\/+$/g, '') ||
+      'qbittorrent'
+    return `${filebrowserMountpoint}/${subfolder}`
+  }
+  return null
+}
 
 export const subfolderPattern = {
   regex: '(?!/)(?!(?:.*/)?\\.\\.(?:/.*)?$).+',
