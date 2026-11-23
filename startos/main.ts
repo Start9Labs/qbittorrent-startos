@@ -9,6 +9,8 @@ import {
   peerHostId,
   peerPort,
   resolveSharedDownloadPath,
+  resolveSharedVolumeTarget,
+  sharedVolumeMountpoint,
   uiPort,
 } from './utils'
 
@@ -45,6 +47,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const sharedDownloadPath = await storeJson
     .read(resolveSharedDownloadPath)
     .const(effects)
+  const volumeTarget = await storeJson
+    .read(resolveSharedVolumeTarget)
+    .const(effects)
 
   let mounts = sdk.Mounts.of()
     // App config (qBittorrent.conf, categories, RSS, logs, …)
@@ -71,12 +76,15 @@ export const main = sdk.setupMain(async ({ effects }) => {
     })
 
   // The save path handed to qBittorrent. Local downloads stay on this
-  // service's own volume; FileBrowser Quantum downloads go into a subfolder of
+  // service's own volume; shared-volume downloads go into a subfolder of the
+  // chosen volume, mounted below; FileBrowser Quantum downloads go into a subfolder of
   // FileBrowser Quantum's data volume, mounted read-write here. FileBrowser
   // Quantum serves that volume as uid 1000 — the same uid qBittorrent's PUID
   // drops to — so files qBittorrent writes are immediately readable and
   // browsable there.
-  const savePath = sharedDownloadPath ?? '/downloads'
+  const savePath = volumeTarget
+    ? `${sharedVolumeMountpoint}/${volumeTarget.subpath}`
+    : (sharedDownloadPath ?? '/downloads')
   if (downloadTarget === 'nextexplorer') {
     mounts = mounts.mountDependency<typeof nextexplorerManifest>({
       dependencyId: 'nextexplorer',
@@ -96,13 +104,59 @@ export const main = sdk.setupMain(async ({ effects }) => {
     })
   }
 
+  const subcontainer = sdk.SubContainer.of(
+    effects,
+    { imageId: 'qbittorrent' },
+    mounts,
+    'qbittorrent-sub',
+  )
+
+  // A shared volume is the user's, and can be revoked, switched to read-only or
+  // go offline. Without it qBittorrent has nowhere to save, so it is not
+  // started at all rather than left to fail every torrent. The grants are read
+  // only for this target, so they restart the service only when it uses one.
+  if (downloadTarget === 'volume') {
+    const grant = (await sdk.getSharedVolumes(effects).const()).find(
+      (volume) => volume.id === volumeTarget?.id,
+    )
+    const problem = !grant
+      ? i18n(
+          'qBittorrent no longer has access to the shared volume chosen for downloads, so it is not running. Give it access again in StartOS, or run Set Download Location to choose another place.',
+        )
+      : grant.readonly
+        ? i18n(
+            'qBittorrent has read-only access to ${name}, so it is not running. Change the access to read/write in StartOS, or run Set Download Location to choose another place.',
+            { name: grant.name },
+          )
+        : (
+              await subcontainer.tryMountSharedVolume({
+                id: grant.id,
+                mountpoint: sharedVolumeMountpoint,
+                readonly: false,
+              })
+            ).kind === 'unavailable'
+          ? i18n(
+              '${name} is not available, so qBittorrent is not running. It starts once the volume is available again.',
+              { name: grant.name },
+            )
+          : null
+    if (problem) {
+      return sdk.Daemons.of(effects).addHealthCheck('download-location', {
+        ready: {
+          display: i18n('Download Location'),
+          gracePeriod: 0,
+          trigger: async function* () {
+            yield
+          },
+          fn: () => ({ result: 'failure', message: problem }),
+        },
+        requires: [],
+      })
+    }
+  }
+
   return sdk.Daemons.of(effects).addDaemon('primary', {
-    subcontainer: sdk.SubContainer.of(
-      effects,
-      { imageId: 'qbittorrent' },
-      mounts,
-      'qbittorrent-sub',
-    ),
+    subcontainer,
     exec: {
       // Configure qBittorrent.conf in-container, then `exec /init` (the
       // image's s6-overlay entrypoint). runAsInit keeps s6 as PID 1.

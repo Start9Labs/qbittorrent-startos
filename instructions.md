@@ -21,6 +21,21 @@
 
 By default, downloads are saved on qBittorrent's own storage at `/downloads` (incomplete files go to `/downloads/incomplete/`), and are included in backups.
 
+### Saving downloads on a shared volume
+
+A shared volume is a folder StartOS manages outside any one service — on your server's drive, an external drive, or a network share — so that several services, and other devices, can use the same files. Saving downloads there keeps them out of qBittorrent's own storage and lets anything else you give access to the volume use them.
+
+1. In StartOS, open **System → Shared Volumes** and create a volume, or pick one you already have.
+2. Give qBittorrent **Read/write** access to it, either there or on this service's **Shared Volumes** tab.
+3. Run the **"Set Download Location"** action, choose **Shared volume**, pick the volume, and (optionally) change the subfolder (default `qbittorrent`).
+
+Things to know:
+
+- **qBittorrent stops if it loses the volume.** If you remove its access, change it to read-only, or the volume goes offline — an unplugged drive, a network share that is down — qBittorrent does not run, and the **Download Location** health check says why. It starts again by itself once the volume is back with read/write access. To use a different place instead, run **"Set Download Location"**.
+- **Renaming the volume in StartOS is safe.** Your torrents keep working.
+- **Only the volume you choose is used.** Giving qBittorrent access to other volumes does nothing until you choose one of them here.
+- **Back the volume up separately.** A backup of qBittorrent does not include downloads on a shared volume; select the volume itself when you create a StartOS backup.
+
 ### Saving downloads into NextExplorer or FileBrowser Quantum
 
 If you also run **NextExplorer** (recommended) or **FileBrowser Quantum**, you can have qBittorrent save downloads straight into it, so you can browse, open, and download the finished files from there:
@@ -35,8 +50,8 @@ To go back, run the action again and choose **Local storage**.
 Notes:
 
 - Changing the location affects **new** downloads only — it does not move files you already downloaded.
-- Other services on this server that import qBittorrent's downloads use the NextExplorer or FileBrowser Quantum folder selected here; they cannot reach downloads kept in local storage.
-- Inside qBittorrent's own **Tools > Options > Directories**, the save path is managed for you; keep downloads under the active location (`/downloads`, `/mnt/nextexplorer` or `/mnt/filebrowser`, whichever is selected). Paths outside the mounted locations are not stored and will be lost on restart.
+- Other services on this server that import qBittorrent's downloads use the NextExplorer or FileBrowser Quantum folder selected here; they cannot reach downloads kept in local storage. For downloads on a shared volume, such a service needs its own access to that volume and has to support shared volumes itself.
+- Inside qBittorrent's own **Tools > Options > Directories**, the save path is managed for you; keep downloads under the active location (`/downloads`, `/mnt/shared`, `/mnt/nextexplorer` or `/mnt/filebrowser`, whichever is selected). Paths outside the mounted locations are not stored and will be lost on restart.
 - You can still add custom download folders and automatic file management within the active location.
 
 ## Adding Torrents
@@ -63,5 +78,5 @@ BitTorrent peers find each other by **IP address and port**, not by hostname —
 
 ## Important Notes
 
-- **Downloads location**: Downloaded files are stored under `/downloads` on the `main` volume by default (included in backups), or inside **NextExplorer** or **FileBrowser Quantum** if you select one via the "Set Download Location" action.
+- **Downloads location**: Downloaded files are stored under `/downloads` on the `main` volume by default (included in backups), or on a shared volume or inside **NextExplorer** or **FileBrowser Quantum** if you select one via the "Set Download Location" action.
 - **Credentials**: The admin password is generated via the "Set Admin Password" action (renamed "Reset Admin Password" after first use). Only qBittorrent's PBKDF2 hash is stored on disk — the plaintext is shown only once, in the action result. If you lose it, just run the action again to set a new one.

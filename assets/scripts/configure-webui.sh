@@ -14,7 +14,8 @@
 #   QBT_PW_HASH env var, set by main.ts from the store; empty until the user
 #   runs the "Set Admin Password" action.
 # - The save path arrives via QBT_SAVE_PATH (set by main.ts from the "Set
-#   Download Location" action): /downloads for local storage, or
+#   Download Location" action): /downloads for local storage,
+#   /mnt/shared/<subfolder> on a shared volume, or
 #   /mnt/filebrowser/<subfolder> when downloads are routed into FileBrowser Quantum.
 #   It is upserted on every boot so switching location takes effect, and the
 #   directory is created + chowned to PUID:PGID so qBittorrent can write it and

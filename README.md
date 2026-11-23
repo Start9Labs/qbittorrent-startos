@@ -9,7 +9,7 @@
 > upstream documentation is accurate and fully applicable — see the
 > Documentation section of `instructions.md` for links.
 
-[qBittorrent](https://github.com/qbittorrent/qBittorrent) is a BitTorrent client with a web interface. This package generates the Web UI password rather than shipping a default, makes logins work behind StartOS's reverse proxy, and can save downloads straight into FileBrowser Quantum so they are browsable from another service.
+[qBittorrent](https://github.com/qbittorrent/qBittorrent) is a BitTorrent client with a web interface. This package generates the Web UI password rather than shipping a default, makes logins work behind StartOS's reverse proxy, and can save downloads onto a StartOS shared volume or straight into NextExplorer or FileBrowser Quantum, so other services can use them.
 
 - **Upstream repo:** <https://github.com/qbittorrent/qBittorrent>
 - **Wrapper repo:** <https://github.com/Start9Labs/qbittorrent-startos>
@@ -65,14 +65,16 @@ The password and reverse-proxy settings live in `[WebUI]`; peer ports live in `[
 
 Two volumes. `main` is mounted twice at different subpaths, its root unmounted; `public` is not mounted here.
 
-| Volume   | Mount Point                      | Purpose                                                      |
-| -------- | -------------------------------- | ------------------------------------------------------------ |
-| `main`   | its `config/` at `/config`       | `qBittorrent.conf`, categories, RSS feeds, logs              |
-| `main`   | its `downloads/` at `/downloads` | Downloaded content and incomplete files, when saving locally |
-| `main`   | its root, not mounted            | `store.json`                                                 |
+| Volume   | Mount Point                      | Purpose                                                                   |
+| -------- | -------------------------------- | ------------------------------------------------------------------------- |
+| `main`   | its `config/` at `/config`       | `qBittorrent.conf`, categories, RSS feeds, logs                           |
+| `main`   | its `downloads/` at `/downloads` | Downloaded content and incomplete files, when saving locally              |
+| `main`   | its root, not mounted            | `store.json`                                                              |
 | `public` | not mounted                      | `api-key` and `download-location.json`, for dependents to mount read-only |
 
 The downloads mount matters more than it looks: the image's default save path is `/downloads`, and without a volume there the content would land on the container's ephemeral filesystem and vanish on every restart.
+
+When downloads are routed to a shared volume, that volume is mounted **read-write** at `/mnt/shared` and the local `downloads/` subpath sits unused. The mountpoint is fixed and does not follow the volume's name: qBittorrent records each torrent's absolute save path, so renaming the volume in StartOS changes nothing here. Only the chosen volume is mounted; granting qBittorrent other volumes has no effect. Local and attached-drive volumes map uid 1000 like the package's own volumes. On a network (CIFS) volume files appear owned by `nobody` with open permissions and cannot be chowned; the wrapper's chown is allowed to fail.
 
 When downloads are routed to NextExplorer or FileBrowser Quantum, that service's data volume is additionally mounted **read-write** at `/mnt/nextexplorer` or `/mnt/filebrowser`, and the local `downloads/` subpath sits unused. NextExplorer's volume root holds one directory per location (each is listed under Locations in NextExplorer), so its subfolder starts with a location name — `Files/qbittorrent` by default.
 
@@ -80,23 +82,25 @@ When downloads are routed to NextExplorer or FileBrowser Quantum, that service's
 
 Three models, none of them qBittorrent's config — that file is written by the wrapper script inside the container, not by a file model.
 
-| File                 | Format | Modelled                  | Written by                             |
-| -------------------- | ------ | ------------------------- | -------------------------------------- |
-| `store.json`         | JSON   | Yes — `FileHelper.json`   | The two actions; init (`apiKey`)       |
-| `api-key` (`public`) | text   | Yes — `FileHelper.string` | Every init, from `store.json` `apiKey` |
-| `download-location.json` (`public`) | JSON | Yes — `FileHelper.json` | Init, reactively from the download-location settings |
+| File                                | Format | Modelled                  | Written by                                           |
+| ----------------------------------- | ------ | ------------------------- | ---------------------------------------------------- |
+| `store.json`                        | JSON   | Yes — `FileHelper.json`   | The two actions; init (`apiKey`)                     |
+| `api-key` (`public`)                | text   | Yes — `FileHelper.string` | Every init, from `store.json` `apiKey`               |
+| `download-location.json` (`public`) | JSON   | Yes — `FileHelper.json`   | Init, reactively from the download-location settings |
 
 | Key                   | Set by                | Notes                                                                              |
 | --------------------- | --------------------- | ---------------------------------------------------------------------------------- |
 | `adminPasswordHash`   | Set Admin Password    | The PBKDF2 value only — **the plaintext is never stored**                          |
 | `apiKey`              | Init, when missing    | The Web API key: `qbt_` plus 28 letters and digits, the format qBittorrent accepts |
-| `downloadTarget`      | Set Download Location | `local`, `nextexplorer` or `filebrowser`                                           |
+| `downloadTarget`      | Set Download Location | `local`, `volume`, `nextexplorer` or `filebrowser`                                 |
+| `sharedVolumeId`      | Set Download Location | The chosen shared volume's stable id, never its name                               |
+| `sharedVolumeSubpath` | Set Download Location | Kept across a switch away, so it reappears                                         |
 | `nextexplorerSubpath` | Set Download Location | Kept across a switch away, so it reappears                                         |
 | `filebrowserSubpath`  | Set Download Location | Kept across a switch back to local, so it reappears                                |
 
-The password hash, API key, download target, and resolved shared download path are read reactively; changing them restarts the service to apply the change, since the wrapper script only runs at boot. The wrapper upserts `apiKey` as `WebUI\APIKey`, so a key rolled or deleted in the Web UI is restored on the next start.
+The password hash, API key, download target, and resolved download path are read reactively, and so are the shared-volume grants while a shared volume is the target; changing them restarts the service to apply the change, since the wrapper script only runs at boot. The wrapper upserts `apiKey` as `WebUI\APIKey`, so a key rolled or deleted in the Web UI is restored on the next start.
 
-**qBittorrent owns the download location.** `download-location.json` publishes `{ "downloadPath": "/mnt/nextexplorer/Files/qbittorrent" }` (or the selected `/mnt/filebrowser/...` path) on `public`; private local storage publishes `{ "downloadPath": null }`. The path is the absolute shared root used by qBittorrent, with the same defaults and leading/trailing slash trimming. It resolves only in a dependent that mounts the same file manager volume at the same mountpoint, exported as `nextexplorerMountpoint` and `filebrowserMountpoint` from `startos/utils.ts`; a missing or invalid `downloadPath` reads as null. It represents persisted intent, not daemon availability, and init keeps it current even while qBittorrent is stopped. Dependents mount `public` read-only and read this file rather than changing qBittorrent's global save path. The model exports `downloadLocationFile`, `downloadLocationShape`, and `downloadLocationJson` from `startos/fileModels/downloadLocation.ts`; `resolveSharedDownloadPath` in `startos/utils.ts` owns shared-path resolution. This file contains no credentials.
+**qBittorrent owns the download location.** `download-location.json` publishes `{ "downloadPath": "/mnt/nextexplorer/Files/qbittorrent" }` (or the selected `/mnt/filebrowser/...` path) on `public`; private local storage publishes `{ "downloadPath": null }`. A shared-volume target also publishes a null `downloadPath`, plus `"sharedVolume": { "id": "<volume id>", "subpath": "qbittorrent" }` (null for every other target): grants do not pass through dependency mounts, so a dependent needs its own grant to that volume and mounts it itself, and a dependent that predates the key sees the same thing as local storage. The path is the absolute shared root used by qBittorrent, with the same defaults and leading/trailing slash trimming. It resolves only in a dependent that mounts the same file manager volume at the same mountpoint, exported as `nextexplorerMountpoint` and `filebrowserMountpoint` from `startos/utils.ts`; a missing or invalid `downloadPath` reads as null. It represents persisted intent, not daemon availability, and init keeps it current even while qBittorrent is stopped. Dependents mount `public` read-only and read this file rather than changing qBittorrent's global save path. The model exports `downloadLocationFile`, `downloadLocationShape`, and `downloadLocationJson` from `startos/fileModels/downloadLocation.ts`; `resolveSharedDownloadPath` and `resolveSharedVolumeTarget` in `startos/utils.ts` own the resolution. This file contains no credentials.
 
 **The password is stored the way qBittorrent stores it, not as a hash of convenience.** qBittorrent 4.2+ expects PBKDF2-HMAC-SHA512 with a random salt, 100,000 iterations, and a 64-byte key, framed as `@ByteArray(<salt>:<key>)`. A plain hash written to the older key is silently ignored — the login just fails with no error.
 
@@ -106,7 +110,7 @@ Completed files can be downloaded directly through the Web UI: select a torrent,
 
 ## Dependencies
 
-Two, both optional, and each only while it is the chosen download target.
+Two, both optional, and each only while it is the chosen download target. A shared volume is not a dependency: it needs StartOS 0.4.3 and a read/write grant, nothing installed.
 
 | Dependency     | Kind     | Version range               | Required                              |
 | -------------- | -------- | --------------------------- | ------------------------------------- |
@@ -138,7 +142,7 @@ Install starts the service and raises a `critical` task: set the admin password.
 
 Running that action generates a 32-character password, shows it once, and restarts the service so the wrapper script writes it into the config. The username is always `admin`.
 
-Downloads go to this service's own volume unless you say otherwise. If you would rather browse and manage them elsewhere, install NextExplorer (or FileBrowser Quantum) and run Set Download Location.
+Downloads go to this service's own volume unless you say otherwise. To keep them where other services and devices can reach them, give qBittorrent read/write access to a shared volume, or install NextExplorer (or FileBrowser Quantum), and run Set Download Location.
 
 ## Actions
 
@@ -155,14 +159,15 @@ One action whose name flips once a password exists.
 
 ### Set Download Location
 
-Local storage, or a subfolder inside NextExplorer or FileBrowser Quantum.
+Local storage, or a subfolder on a shared volume or inside NextExplorer or FileBrowser Quantum.
 
-- **What it changes:** `downloadTarget` and the matching subpath in `store.json`; through them the container's mounts, the save path, the public download-location export, and the package's dependency.
+- **Shared volume choices** are the volumes currently granted to qBittorrent, listed by name and stored by id. Read-only grants are listed but cannot be chosen, and with no grant the field is disabled with a pointer to StartOS's Shared Volumes controls. The action re-checks the grant when it runs and fails if the volume is no longer granted read/write.
+- **What it changes:** `downloadTarget` and the matching subpath in `store.json` (plus `sharedVolumeId` for a shared volume); through them the container's mounts, the save path, the public download-location export, and the package's dependency.
 - **Cost:** seconds, then a restart.
 - **Repeat safety:** idempotent. Switching back to local leaves the stored subfolder alone, so it reappears if you switch back again.
 - **Existing downloads do not move.** The new path applies to what qBittorrent saves from then on; files already on the old path stay there, and torrents still seeding from it keep pointing at it.
 - **The subfolder is created automatically**, and chowned so both services can use it.
-- **Input rules:** neither subfolder may start with `/` or contain a `..` folder. A value stored before this rule still works, since `main` trims leading and trailing slashes; the rule applies the next time the action is run.
+- **Input rules:** no subfolder may start with `/` or contain a `..` folder. A value stored before this rule still works, since `main` trims leading and trailing slashes; the rule applies the next time the action is run.
 
 ## Tasks
 
@@ -176,11 +181,14 @@ Checked on every init, not just at install — clearing the hash brings the task
 
 ## Health Checks
 
-One check, on the only daemon.
+One check on the only daemon, and one that replaces it when a shared-volume download target cannot be used.
 
-| Check     | Displayed       | Method                 |
-| --------- | --------------- | ---------------------- |
-| `primary` | "Web Interface" | Port 8080 is listening |
+| Check               | Displayed           | Method                                                   |
+| ------------------- | ------------------- | -------------------------------------------------------- |
+| `primary`           | "Web Interface"     | Port 8080 is listening                                   |
+| `download-location` | "Download Location" | Always failing; present only instead of `primary`, below |
+
+**qBittorrent is not started when its shared volume cannot be written.** If the chosen volume's grant has been revoked, changed to read-only, or the volume is offline (an unplugged drive, an unreachable share), `main` starts no daemon and reports `download-location` as failing with the reason, rather than letting every torrent error against a missing or read-only path. `qbittorrent-sub` does not exist in that state, so `attach` fails. The grants are read reactively, so restoring read/write access or the volume coming back restarts the service into its normal state; choosing another target with Set Download Location does the same. The volume's name in the message is the one read at start and can lag a rename.
 
 qBittorrent binds quickly, so a failure means it did not start. One cause is worth knowing because it presents as nothing at all:
 
@@ -195,8 +203,8 @@ Because the script also tails qBittorrent's own log to stdout, the service log c
 The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No dump step and nothing excluded. The `public` volume is not backed up; init regenerates `api-key` and `download-location.json` from `store.json`.
 
 - **Included:** `qBittorrent.conf` with the password hash and every Web UI setting, the torrent state, categories, RSS feeds, logs, `store.json` (so the API key survives a restore), **and every locally-saved download**.
-- **Size:** with local downloads, this backup is as large as your download directory. Routing downloads to NextExplorer or FileBrowser Quantum moves that bulk into that service's backup instead — those files are outside this volume and are never captured here.
-- **Restore:** complete, and no task is raised — the password comes back with the store. Torrents resume against whatever save path is configured.
+- **Size:** with local downloads, this backup is as large as your download directory. Routing downloads to NextExplorer or FileBrowser Quantum moves that bulk into that service's backup instead — those files are outside this volume and are never captured here. Downloads on a shared volume are in no service's backup: a shared volume is its own item in a StartOS backup and is selected there.
+- **Restore:** complete, and no task is raised — the password comes back with the store. Torrents resume against whatever save path is configured. A shared volume restored from backup is a new volume with a new id and no grants, so after restoring one, grant it to qBittorrent and run Set Download Location again; until then the Download Location check fails.
 
 ## Limitations and Differences
 
@@ -204,9 +212,11 @@ The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No du
 2. **Host-header validation and CSRF protection are disabled**, because StartOS's reverse proxy rewrites what they check. Localhost auth is disabled too, so a password is always required.
 3. **qBittorrent's config is written from inside the container at boot.** A change made in the Web UI to one of the package-owned keys is overwritten on the next restart.
 4. **Changing the download location does not move existing files.**
-5. **Downloads routed to NextExplorer or FileBrowser Quantum are not in this service's backup.**
+5. **Downloads routed to a shared volume, NextExplorer or FileBrowser Quantum are not in this service's backup.**
 6. **The peer port is masked** and is not meant to be opened in a browser.
 7. **No riscv64 build.** x86_64 and aarch64 only.
+8. **One shared volume at a time.** Only the volume chosen as the download location is mounted; other granted volumes are not visible inside qBittorrent.
+9. **Shared volumes need StartOS 0.4.3 or later**, which this package requires.
 
 ---
 
@@ -222,11 +232,12 @@ subcontainers:
   - qbittorrent-sub # the only container
 volumes:
   main: its config/ at /config, its downloads/ at /downloads; store.json unmounted
+  shared volume: the one chosen as download target, read-write at /mnt/shared
   public: api-key and download-location.json, unmounted; dependents mount it read-only
 file_models:
   - store.json # qBittorrent.conf is written by the wrapper script, not modelled
   - public/api-key # the Web API key dependents mount read-only
-  - public/download-location.json # downloadPath: absolute shared root, or null for local storage
+  - public/download-location.json # downloadPath: absolute file-manager root or null; sharedVolume: { id, subpath } or null
 startos_managed_env_vars:
   - PUID
   - PGID
@@ -250,4 +261,5 @@ tasks:
   - { action: set-admin-password, severity: critical } # re-raises whenever unset
 health_checks:
   - primary # displayed "Web Interface"
+  - download-location # failing, replaces primary while the chosen shared volume is revoked, read-only or offline
 ```

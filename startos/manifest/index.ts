@@ -11,6 +11,7 @@ export const manifest = setupManifest({
   donationUrl: 'https://www.qbittorrent.org/donate',
   description: { short, long },
   volumes: ['main', 'public'],
+  sharedVolumes: true,
   images: {
     qbittorrent: {
       source: {
