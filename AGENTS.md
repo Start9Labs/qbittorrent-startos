@@ -37,4 +37,6 @@ verified, tried, and decided belongs in the commit message and the PR body.
 - **Never store the plaintext password.** `adminPasswordHash` holds only the PBKDF2 value `qbPasswordPbkdf2` produces; qBittorrent silently ignores a plain hash.
 - **Keep the first-boot seed in `configure-webui.sh` a complete config.** qBittorrent never re-derives defaults for a config file that exists.
 - **Don't drop the `lockfile`/`ipc-socket` deletion or the log tail from `configure-webui.sh`.** The first prevents a silent crash loop after a SIGKILL; the second is the service's only log.
+- **Keep the shared volume at the fixed `sharedVolumeMountpoint` and store its id, not its name.** A mountpoint derived from the volume's name looks friendlier, but a rename would then orphan every torrent's recorded save path.
+- **Don't start the daemon when the chosen shared volume fails to mount.** `configure-webui.sh` would `mkdir -p` the save path on the container's ephemeral filesystem or die on the read-only placeholder; `main` returns only the failing `download-location` check instead.
 - **Keep the peer listener on `peerPort`.** `Session\AnnouncePort` follows StartOS's external assignment; changing only the listener breaks forwarding.

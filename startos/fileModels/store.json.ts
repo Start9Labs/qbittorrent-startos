@@ -14,12 +14,16 @@ const shape = z.looseObject({
   // changing it restarts the service and re-mounts. FileBrowser Quantum runs as
   // uid 1000, same as qBittorrent's PUID, so the files are readable as-is.
   downloadTarget: z
-    .enum(['local', 'nextexplorer', 'filebrowser'])
+    .enum(['local', 'nextexplorer', 'filebrowser', 'volume'])
     .catch('local'),
   // Subfolder inside NextExplorer's volume, starting with the drive name.
   nextexplorerSubpath: z.string().catch('Files/qbittorrent'),
   // Subfolder inside FileBrowser Quantum's volume to save into (ignored when local).
   filebrowserSubpath: z.string().catch('qbittorrent'),
+  // The shared volume downloads are saved to, by its stable id — a volume's
+  // name can be edited — and the subfolder inside it.
+  sharedVolumeId: z.string().optional().catch(undefined),
+  sharedVolumeSubpath: z.string().catch('qbittorrent'),
 })
 
 export const storeJson = FileHelper.json(

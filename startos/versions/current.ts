@@ -1,18 +1,18 @@
 import { VersionInfo, IMPOSSIBLE } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '5.3.0:7',
+  version: '5.3.0:8',
   releaseNotes: {
     en_US:
-      'Publishes the selected shared download folder for other services, including while qBittorrent is stopped. Private local downloads are not shared. Requires StartOS 0.4.2 or later.',
+      'Downloads can now be saved to a StartOS shared volume: give qBittorrent read/write access to one, then choose it in Set Download Location. Requires StartOS 0.4.3 or later.',
     es_ES:
-      'Publica la carpeta de descargas compartida seleccionada para otros servicios, incluso cuando qBittorrent está detenido. Las descargas locales privadas no se comparten. Requiere StartOS 0.4.2 o posterior.',
+      'Las descargas ahora pueden guardarse en un volumen compartido de StartOS: dé a qBittorrent acceso de lectura y escritura a uno y elíjalo en Establecer ubicación de descargas. Requiere StartOS 0.4.3 o posterior.',
     de_DE:
-      'Veröffentlicht den ausgewählten gemeinsamen Downloadordner für andere Dienste, auch wenn qBittorrent gestoppt ist. Private lokale Downloads werden nicht freigegeben. Erfordert StartOS 0.4.2 oder neuer.',
+      'Downloads können jetzt auf einem geteilten StartOS-Volume gespeichert werden: Geben Sie qBittorrent Lese-/Schreibzugriff auf eines und wählen Sie es unter Download-Speicherort festlegen. Erfordert StartOS 0.4.3 oder neuer.',
     pl_PL:
-      'Udostępnia innym usługom wybrany współdzielony folder pobierania, także gdy qBittorrent jest zatrzymany. Prywatne lokalne pliki nie są udostępniane. Wymaga StartOS 0.4.2 lub nowszego.',
+      'Pobrania można teraz zapisywać na woluminie współdzielonym StartOS: przyznaj qBittorrent dostęp do odczytu i zapisu, a następnie wybierz wolumin w akcji Ustaw lokalizację pobierania. Wymaga StartOS 0.4.3 lub nowszego.',
     fr_FR:
-      'Publie le dossier de téléchargement partagé sélectionné pour les autres services, même lorsque qBittorrent est arrêté. Les téléchargements locaux privés ne sont pas partagés. Nécessite StartOS 0.4.2 ou ultérieur.',
+      'Les téléchargements peuvent désormais être enregistrés sur un volume partagé StartOS : donnez à qBittorrent un accès en lecture/écriture à un volume, puis choisissez-le dans Définir l’emplacement de téléchargement. Nécessite StartOS 0.4.3 ou ultérieur.',
   },
   migrations: { up: async () => {}, down: IMPOSSIBLE },
 })

@@ -12,6 +12,11 @@ export const peerPort = 6881
 export const nextexplorerMountpoint = '/mnt/nextexplorer'
 export const filebrowserMountpoint = '/mnt/filebrowser'
 
+// Where the shared volume chosen for downloads is mounted. Fixed rather than
+// derived from the volume's name: qBittorrent records every torrent's absolute
+// save path, so a path that followed a rename would orphan them all.
+export const sharedVolumeMountpoint = '/mnt/shared'
+
 export function resolveSharedDownloadPath(
   store: Pick<
     ReturnType<typeof storeJson.validate>,
@@ -33,6 +38,22 @@ export function resolveSharedDownloadPath(
     return `${filebrowserMountpoint}/${subfolder}`
   }
   return null
+}
+
+/** The shared volume downloads go to, or null when the target is anything else. */
+export function resolveSharedVolumeTarget(
+  store: Pick<
+    ReturnType<typeof storeJson.validate>,
+    'downloadTarget' | 'sharedVolumeId' | 'sharedVolumeSubpath'
+  > | null,
+): { id: string; subpath: string } | null {
+  if (store?.downloadTarget !== 'volume' || !store.sharedVolumeId) return null
+  return {
+    id: store.sharedVolumeId,
+    subpath:
+      (store.sharedVolumeSubpath ?? 'qbittorrent').replace(/^\/+|\/+$/g, '') ||
+      'qbittorrent',
+  }
 }
 
 export const subfolderPattern = {

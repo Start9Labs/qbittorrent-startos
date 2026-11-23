@@ -6,6 +6,9 @@ const dict = {
   'Web Interface': 1,
   'The web interface is ready': 2,
   'The web interface is not ready': 3,
+  'qBittorrent no longer has access to the shared volume chosen for downloads, so it is not running. Give it access again in StartOS, or run Set Download Location to choose another place.': 29,
+  'qBittorrent has read-only access to ${name}, so it is not running. Change the access to read/write in StartOS, or run Set Download Location to choose another place.': 30,
+  '${name} is not available, so qBittorrent is not running. It starts once the volume is available again.': 31,
 
   // interfaces.ts
   'Web UI': 4,
@@ -29,9 +32,9 @@ const dict = {
   // actions/setDownloadLocation.ts
   'Cannot start with a slash or contain a .. folder': 28,
   'Set Download Location': 15,
-  'Choose where qBittorrent saves downloads — locally, or into NextExplorer or FileBrowser Quantum.': 16,
+  'Choose where qBittorrent saves downloads — locally, on a shared volume, or into NextExplorer or FileBrowser Quantum.': 16,
   'Download Location': 17,
-  "Where qBittorrent saves downloads.\n- Local storage: in qBittorrent's own storage, included in its backups.\n- NextExplorer: in a folder in NextExplorer, where you can browse, download and manage the files.\n- FileBrowser Quantum: in a folder in FileBrowser Quantum, where you can browse, download and manage the files.": 18,
+  "Where qBittorrent saves downloads.\n- Local storage: in qBittorrent's own storage, included in its backups.\n- Shared volume: in a folder on a StartOS shared volume, where other services and devices with access to it can use the files.\n- NextExplorer: in a folder in NextExplorer, where you can browse, download and manage the files.\n- FileBrowser Quantum: in a folder in FileBrowser Quantum, where you can browse, download and manage the files.": 18,
   'Local storage': 19,
   'FileBrowser Quantum': 20,
   'FileBrowser Quantum Subfolder': 21,
@@ -39,6 +42,14 @@ const dict = {
   NextExplorer: 24,
   'NextExplorer Subfolder': 25,
   'Folder inside NextExplorer where downloads are saved, starting with one of its locations, such as Files. Created automatically; NextExplorer must be installed.': 26,
+  'Shared volume': 32,
+  'Shared Volume': 33,
+  'The shared volume to save downloads on. Only volumes qBittorrent has read/write access to can be chosen; give it access under Shared Volumes in StartOS.': 34,
+  'read-only': 35,
+  'qBittorrent has no access to a shared volume yet. Give it access under Shared Volumes in StartOS, then run this action again.': 36,
+  'Shared Volume Subfolder': 37,
+  'Folder on the shared volume where downloads are saved. Created automatically.': 38,
+  'qBittorrent needs read/write access to that shared volume. Change its access under Shared Volumes in StartOS, then run this action again.': 39,
 } as const
 
 /**
