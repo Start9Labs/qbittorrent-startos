@@ -8,8 +8,9 @@
 # on-shutdown config rewrite clobbering our changes.
 #
 # - qBittorrent preserves an existing config instead of re-deriving defaults.
-# - The WebUI flags make logins work behind the StartOS reverse proxy
-#   (HostHeaderValidation/CSRF) and always require the password (LocalHostAuth).
+# - The WebUI access settings are re-applied on every boot: the password is
+#   always required, cross-site requests are refused, and only the StartOS
+#   proxy (QBT_PROXY_IP) is trusted for the client address and scheme.
 # - The admin password (qBittorrent PBKDF2, already framed) arrives via the
 #   QBT_PW_HASH env var, set by main.ts from the store; empty until the user
 #   runs the "Set Admin Password" action.
@@ -29,6 +30,7 @@ set -e
 
 : "${QBT_PEER_PORT:?Missing internal peer port}"
 : "${QBT_ANNOUNCE_PORT:?Missing assigned peer port}"
+: "${QBT_PROXY_IP:?Missing StartOS proxy address}"
 
 CONF=/config/qBittorrent/qBittorrent.conf
 mkdir -p /config/qBittorrent
@@ -88,10 +90,15 @@ upsert_webui() {
   upsert_migrated WebUI "$1" "$2" "WebUI\\$1"
 }
 
-# Reverse-proxy compatibility + always-require-password.
+# The Host port is StartOS's external one, never the container's own.
 upsert_webui HostHeaderValidation false
-upsert_webui CSRFProtection false
-upsert_webui LocalHostAuth false
+upsert_webui CSRFProtection true
+upsert_webui SecureCookie true
+upsert_webui LocalHostAuth true
+upsert_webui AuthSubnetWhitelistEnabled false
+upsert_webui ReverseProxySupportEnabled true
+upsert_webui TrustedReverseProxiesList "$QBT_PROXY_IP"
+upsert_webui Username admin
 
 upsert_migrated BitTorrent 'Session\Port' "$QBT_PEER_PORT" 'Connection\PortRangeMin'
 upsert_migrated BitTorrent 'Session\UseRandomPort' false 'General\UseRandomPort'

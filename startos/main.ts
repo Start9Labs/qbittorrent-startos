@@ -18,7 +18,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // Read the password hash reactively, so changing it (via the "Set Admin
   // Password" action) restarts the service automatically. It is passed to the
   // configure script (assets/scripts/configure-webui.sh) via QBT_PW_HASH; that
-  // script writes it — and the reverse-proxy flags — into qBittorrent.conf
+  // script writes it — and the Web UI access settings — into qBittorrent.conf
   // from INSIDE the container, before qBittorrent starts. (Writing the config
   // from this host/service context fails: /config/qBittorrent is owned by the
   // container's PUID, which the service context can't write.)
@@ -112,6 +112,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       // WEBUI_PORT pins the WebUI port to match the interface + health check;
       // QBT_PW_HASH carries the admin password hash (empty until set);
       // QBT_API_KEY is the Web API key published to dependents;
+      // QBT_PROXY_IP is the StartOS proxy, the only trusted X-Forwarded-* source;
       // QBT_SAVE_PATH is the resolved download directory inside the container.
       env: {
         PUID: '1000',
@@ -120,6 +121,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
         WEBUI_PORT: String(uiPort),
         QBT_PEER_PORT: String(peerPort),
         QBT_ANNOUNCE_PORT: String(announcePort),
+        QBT_PROXY_IP: await sdk.getOsIp(effects),
         QBT_PW_HASH: passwordHash ?? '',
         QBT_API_KEY: apiKey ?? '',
         QBT_SAVE_PATH: savePath,
