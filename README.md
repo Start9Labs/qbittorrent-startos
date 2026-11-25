@@ -52,24 +52,36 @@ The LinuxServer image, not started directly.
 What the script does on every boot:
 
 - **Seeds a config on first boot.** The seed and boot-time upserts populate the required settings before qBittorrent starts; qBittorrent preserves an existing file rather than re-deriving defaults.
-- **Upserts the settings this package owns** into the existing file — the reverse-proxy flags, peer listen and announce ports, disabled automatic port forwarding, the save paths, the password hash, and the Web API key — preserving everything you have changed in the Web UI.
+- **Upserts the settings this package owns** into the existing file — the Web UI access settings, peer listen and announce ports, disabled automatic port forwarding, the save paths, the password hash, and the Web API key — preserving everything you have changed in the Web UI.
 - **Creates and chowns the download directories** to the runtime user, non-recursively so a large existing download tree is never re-owned.
 - **Clears qBittorrent's stale single-instance lock.** See [Health Checks](#health-checks) — this one is worth understanding.
 - **Tails qBittorrent's log file to stdout**, because `qbittorrent-nox` writes only to a file and the service log would otherwise go silent after the image's banner.
 
-Three settings are upserted for the reverse proxy and are not yours to change: host-header validation and CSRF protection are off, because StartOS's proxy rewrites the headers they check, and localhost auth is off so the password is always required.
+The Web UI access settings are re-applied on every boot and are not yours to change:
 
-The password and reverse-proxy settings live in `[WebUI]`; peer ports live in `[BitTorrent]`, and automatic port forwarding is disabled in `[Network]`. The wrapper also updates legacy `[Preferences]` entries for managed Web UI and network settings if present: upstream's config migration copies those entries over the canonical ones before removing them. Download paths use only the `[BitTorrent]` session keys.
+| Key (`[WebUI]`)                                           | Value              | Why                                                                                                                  |
+| --------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `CSRFProtection`                                          | `true`             | Refuses cross-site requests; the session cookie gets `SameSite=Lax`                                                  |
+| `SecureCookie`                                            | `true`             | The session cookie is `Secure` on HTTPS addresses                                                                    |
+| `LocalHostAuth`                                           | `true`             | Loopback clients sign in like everyone else                                                                          |
+| `AuthSubnetWhitelistEnabled`                              | `false`            | No address range skips the login                                                                                     |
+| `ReverseProxySupportEnabled`, `TrustedReverseProxiesList` | `true`, `10.0.3.1` | The StartOS proxy (`sdk.getOsIp`) is the only source trusted for `X-Forwarded-For` and `X-Forwarded-Proto`           |
+| `Username`                                                | `admin`            | The name the password action reports                                                                                 |
+| `HostHeaderValidation`                                    | `false`            | qBittorrent rejects a `Host` whose port differs from its own 8080, and StartOS serves the UI on other external ports |
+
+StartOS's HTTP proxy passes the browser's `Host` through unchanged and connects to the container from `10.0.3.1`, adding `X-Forwarded-For` with the client's address and, on HTTPS addresses, `X-Forwarded-Proto: https`; it strips any `X-Forwarded-*` header the client sent. qBittorrent therefore compares each request's `Origin` with its own `Host`, sees each client's real address (so a failed-login ban affects only that client), and marks the cookie `Secure` over HTTPS. Requests with the Web API key skip the cross-site check, as upstream does.
+
+The password and access settings live in `[WebUI]`; peer ports live in `[BitTorrent]`, and automatic port forwarding is disabled in `[Network]`. The wrapper also updates legacy `[Preferences]` entries for managed Web UI and network settings if present: upstream's config migration copies those entries over the canonical ones before removing them. Download paths use only the `[BitTorrent]` session keys.
 
 ## Volume and Data Layout
 
 Two volumes. `main` is mounted twice at different subpaths, its root unmounted; `public` is not mounted here.
 
-| Volume   | Mount Point                      | Purpose                                                      |
-| -------- | -------------------------------- | ------------------------------------------------------------ |
-| `main`   | its `config/` at `/config`       | `qBittorrent.conf`, categories, RSS feeds, logs              |
-| `main`   | its `downloads/` at `/downloads` | Downloaded content and incomplete files, when saving locally |
-| `main`   | its root, not mounted            | `store.json`                                                 |
+| Volume   | Mount Point                      | Purpose                                                                   |
+| -------- | -------------------------------- | ------------------------------------------------------------------------- |
+| `main`   | its `config/` at `/config`       | `qBittorrent.conf`, categories, RSS feeds, logs                           |
+| `main`   | its `downloads/` at `/downloads` | Downloaded content and incomplete files, when saving locally              |
+| `main`   | its root, not mounted            | `store.json`                                                              |
 | `public` | not mounted                      | `api-key` and `download-location.json`, for dependents to mount read-only |
 
 The downloads mount matters more than it looks: the image's default save path is `/downloads`, and without a volume there the content would land on the container's ephemeral filesystem and vanish on every restart.
@@ -80,11 +92,11 @@ When downloads are routed to NextExplorer or FileBrowser Quantum, that service's
 
 Three models, none of them qBittorrent's config — that file is written by the wrapper script inside the container, not by a file model.
 
-| File                 | Format | Modelled                  | Written by                             |
-| -------------------- | ------ | ------------------------- | -------------------------------------- |
-| `store.json`         | JSON   | Yes — `FileHelper.json`   | The two actions; init (`apiKey`)       |
-| `api-key` (`public`) | text   | Yes — `FileHelper.string` | Every init, from `store.json` `apiKey` |
-| `download-location.json` (`public`) | JSON | Yes — `FileHelper.json` | Init, reactively from the download-location settings |
+| File                                | Format | Modelled                  | Written by                                           |
+| ----------------------------------- | ------ | ------------------------- | ---------------------------------------------------- |
+| `store.json`                        | JSON   | Yes — `FileHelper.json`   | The two actions; init (`apiKey`)                     |
+| `api-key` (`public`)                | text   | Yes — `FileHelper.string` | Every init, from `store.json` `apiKey`               |
+| `download-location.json` (`public`) | JSON   | Yes — `FileHelper.json`   | Init, reactively from the download-location settings |
 
 | Key                   | Set by                | Notes                                                                              |
 | --------------------- | --------------------- | ---------------------------------------------------------------------------------- |
@@ -148,7 +160,7 @@ Two actions, both available whether or not the service is running, and both appl
 
 One action whose name flips once a password exists.
 
-- **What it changes:** `adminPasswordHash` in `store.json`; the wrapper script writes it into `qBittorrent.conf` on the next boot.
+- **What it changes:** `adminPasswordHash` in `store.json`; the wrapper script writes it into `qBittorrent.conf` on the next boot, along with the access settings above, so the new password and `admin` are the only way in.
 - **Cost:** seconds, then a restart.
 - **Repeat safety:** safe to re-run; each run generates a fresh password and invalidates the previous one. Once a password exists, StartOS asks for confirmation before running it.
 - **Outputs:** the username and password, masked and copyable. **The plaintext is shown once and stored nowhere** — running the action again is the only recovery.
@@ -201,7 +213,7 @@ The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')`. No du
 ## Limitations and Differences
 
 1. **No default credential.** The Web UI is unusable until the password action is run, and the password is shown once.
-2. **Host-header validation and CSRF protection are disabled**, because StartOS's reverse proxy rewrites what they check. Localhost auth is disabled too, so a password is always required.
+2. **The Web UI's access settings are fixed.** The password is always required, from every address, for the username `admin`; cross-site requests are refused; host-header validation is off.
 3. **qBittorrent's config is written from inside the container at boot.** A change made in the Web UI to one of the package-owned keys is overwritten on the next restart.
 4. **Changing the download location does not move existing files.**
 5. **Downloads routed to NextExplorer or FileBrowser Quantum are not in this service's backup.**
@@ -234,6 +246,7 @@ startos_managed_env_vars:
   - WEBUI_PORT
   - QBT_PEER_PORT # internal listener from peerPort
   - QBT_ANNOUNCE_PORT # reactive external assignment from peer-multi
+  - QBT_PROXY_IP # sdk.getOsIp, the only trusted reverse proxy
   - QBT_PW_HASH # the PBKDF2 value; empty until the password action runs
   - QBT_API_KEY # the Web API key from store.json
   - QBT_SAVE_PATH # resolved from the download-location action

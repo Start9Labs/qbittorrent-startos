@@ -65,3 +65,4 @@ BitTorrent peers find each other by **IP address and port**, not by hostname —
 
 - **Downloads location**: Downloaded files are stored under `/downloads` on the `main` volume by default (included in backups), or inside **NextExplorer** or **FileBrowser Quantum** if you select one via the "Set Download Location" action.
 - **Credentials**: The admin password is generated via the "Set Admin Password" action (renamed "Reset Admin Password" after first use). Only qBittorrent's PBKDF2 hash is stored on disk — the plaintext is shown only once, in the action result. If you lose it, just run the action again to set a new one.
+- **Web UI login settings are managed**: the password is always required, from every device, for the username `admin`. Changes to the username, authentication bypass, or cross-site request protection under **Tools > Options > Web UI** are undone the next time qBittorrent starts.
