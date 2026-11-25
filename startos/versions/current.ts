@@ -1,18 +1,18 @@
 import { VersionInfo, IMPOSSIBLE } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '5.3.0:7',
+  version: '5.3.1:0',
   releaseNotes: {
     en_US:
-      'Publishes the selected shared download folder for other services, including while qBittorrent is stopped. Private local downloads are not shared. Requires StartOS 0.4.2 or later.',
+      'Updated qBittorrent to 5.3.1. Fixes WebTorrent trackers being dropped from magnet links, preserves web seed URLs when editing a torrent in the Web UI, and makes resume data saving more reliable at shutdown. Full notes: https://github.com/qbittorrent/qBittorrent/blob/release-5.3.1/Changelog',
     es_ES:
-      'Publica la carpeta de descargas compartida seleccionada para otros servicios, incluso cuando qBittorrent está detenido. Las descargas locales privadas no se comparten. Requiere StartOS 0.4.2 o posterior.',
+      'qBittorrent actualizado a 5.3.1. Corrige la eliminación de rastreadores WebTorrent en los enlaces magnet, conserva las URL de semillas web al editar un torrent en la interfaz web y hace más fiable el guardado de los datos de reanudación al apagar. Notas completas: https://github.com/qbittorrent/qBittorrent/blob/release-5.3.1/Changelog',
     de_DE:
-      'Veröffentlicht den ausgewählten gemeinsamen Downloadordner für andere Dienste, auch wenn qBittorrent gestoppt ist. Private lokale Downloads werden nicht freigegeben. Erfordert StartOS 0.4.2 oder neuer.',
+      'qBittorrent auf 5.3.1 aktualisiert. Behebt, dass WebTorrent-Tracker aus Magnet-Links verworfen wurden, behält Webseed-URLs beim Bearbeiten eines Torrents in der Weboberfläche bei und speichert Fortsetzungsdaten beim Herunterfahren zuverlässiger. Vollständige Hinweise: https://github.com/qbittorrent/qBittorrent/blob/release-5.3.1/Changelog',
     pl_PL:
-      'Udostępnia innym usługom wybrany współdzielony folder pobierania, także gdy qBittorrent jest zatrzymany. Prywatne lokalne pliki nie są udostępniane. Wymaga StartOS 0.4.2 lub nowszego.',
+      'Zaktualizowano qBittorrent do 5.3.1. Naprawia odrzucanie trackerów WebTorrent z linków magnet, zachowuje adresy URL web seed podczas edycji torrenta w interfejsie WWW i zapewnia niezawodniejszy zapis danych wznawiania przy zamykaniu. Pełne informacje: https://github.com/qbittorrent/qBittorrent/blob/release-5.3.1/Changelog',
     fr_FR:
-      'Publie le dossier de téléchargement partagé sélectionné pour les autres services, même lorsque qBittorrent est arrêté. Les téléchargements locaux privés ne sont pas partagés. Nécessite StartOS 0.4.2 ou ultérieur.',
+      'Mise à jour de qBittorrent vers 5.3.1. Corrige la suppression des trackers WebTorrent des liens magnet, conserve les URL de seeds web lors de la modification d’un torrent dans l’interface web et fiabilise l’enregistrement des données de reprise à l’arrêt. Notes complètes : https://github.com/qbittorrent/qBittorrent/blob/release-5.3.1/Changelog',
   },
   migrations: { up: async () => {}, down: IMPOSSIBLE },
 })

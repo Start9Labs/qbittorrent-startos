@@ -17,7 +17,7 @@ curl -fsSL https://hub.docker.com/v2/repositories/linuxserver/qbittorrent/tags/5
 The current pin lives in `startos/manifest/index.ts`:
 
 ```typescript
-dockerTag: 'linuxserver/qbittorrent:5.3.0',
+source: { dockerTag: 'linuxserver/qbittorrent:5.3.1' },
 ```
 
 ## Applying the bump
